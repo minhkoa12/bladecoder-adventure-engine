@@ -205,13 +205,13 @@ public class SpriteActor extends InteractiveActor implements AssetConsumer {
 			if (fa.sound != null) {
 				// Backwards compatibility
 				String sid = fa.sound;
-				if (World.getInstance().getSounds().get(sid) == null)
+				if (scene.getWorld().getSounds().get(sid) == null)
 					sid = id + "_" + fa.sound;
 
 				if (scene != null)
 					scene.getSoundManager().stopSound(sid);
 				else
-					World.getInstance().getCurrentScene().getSoundManager().stopSound(sid); // The actor is in the
+					scene.getWorld().getCurrentScene().getSoundManager().stopSound(sid); // The actor is in the
 																							// inventory
 			}
 
@@ -239,13 +239,13 @@ public class SpriteActor extends InteractiveActor implements AssetConsumer {
 			if (fa.sound != null && repeatType != Tween.Type.REVERSE) {
 				// Backwards compatibility
 				String sid = fa.sound;
-				if (World.getInstance().getSounds().get(sid) == null)
+				if (scene.getWorld().getSounds().get(sid) == null)
 					sid = id + "_" + fa.sound;
 
 				if (scene != null)
 					scene.getSoundManager().playSound(sid);
 				else
-					World.getInstance().getCurrentScene().getSoundManager().playSound(sid); // The actor is in the
+					scene.getWorld().getCurrentScene().getSoundManager().playSound(sid); // The actor is in the
 																							// inventory
 			}
 

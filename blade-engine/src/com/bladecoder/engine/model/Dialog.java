@@ -33,7 +33,7 @@ public class Dialog implements Serializable {
 	private int currentOption = -1;
 
 	private String id;
-	private String actor;
+	private InteractiveActor actor;
 
 	public String getId() {
 		return id;
@@ -43,11 +43,11 @@ public class Dialog implements Serializable {
 		this.id = id;
 	}
 
-	public String getActor() {
+	public InteractiveActor getActor() {
 		return actor;
 	}
 
-	public void setActor(String actor) {
+	public void setActor(InteractiveActor actor) {
 		this.actor = actor;
 	}
 	
@@ -78,8 +78,7 @@ public class Dialog implements Serializable {
 		if (v == null)
 			v = DEFAULT_DIALOG_VERB;
 
-		// TODO: DELETE REFERENCE TO WORLD FROM DIALOG
-		CharacterActor a = (CharacterActor) World.getInstance().getCurrentScene().getActor(actor, false);
+		CharacterActor a = (CharacterActor) actor;
 		a.runVerb(v);
 
 		if (o.isOnce())
@@ -142,7 +141,6 @@ public class Dialog implements Serializable {
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
 			json.writeValue("id", id);
-//			json.writeValue("actor", actor);
 		} else {
 			json.writeValue("currentOption", currentOption);
 		}
@@ -156,7 +154,6 @@ public class Dialog implements Serializable {
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
 			id = json.readValue("id", String.class, jsonData);
-//			actor = json.readValue("actor", String.class, jsonData);
 			options = json.readValue("options", ArrayList.class, DialogOption.class, jsonData);
 		} else {
 			JsonValue optionsValue = jsonData.get("options");

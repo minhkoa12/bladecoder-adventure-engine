@@ -110,7 +110,9 @@ public class EditorLogger {
 
 	public static void setDebug() {
 		level = Levels.DEBUG;
-		console.setLoggingToSystem(true);
+		
+		if(console != null)
+			console.setLoggingToSystem(true);
 	}
 
 	public static void setConsole(Console console) {
@@ -131,5 +133,8 @@ public class EditorLogger {
 		});
 
 		console.setCommandExecutor(new EditorCommandExecutor());
+		
+		if(level == Levels.DEBUG)
+			console.setLoggingToSystem(true);
 	}
 }

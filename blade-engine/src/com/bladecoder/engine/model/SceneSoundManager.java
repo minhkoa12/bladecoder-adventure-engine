@@ -21,6 +21,12 @@ import com.bladecoder.engine.util.EngineLogger;
 public class SceneSoundManager implements Serializable, AssetConsumer {
 
 	private HashMap<String, LoadedSound> loadedSounds = new HashMap<String, LoadedSound>(0);
+	
+	final World w;
+	
+	public SceneSoundManager(World w) {
+		this.w = w;
+	}
 
 	public void addSoundToLoad(SoundDesc s) {
 		loadedSounds.put(s.getId(), new LoadedSound(s));
@@ -32,7 +38,7 @@ public class SceneSoundManager implements Serializable, AssetConsumer {
 
 		if (s == null) {
 			// Not loaded, load and add to the loaded list.
-			SoundDesc sd = World.getInstance().getSounds().get(id);
+			SoundDesc sd = w.getSounds().get(id);
 
 			if (sd != null) {
 				addSoundToLoad(sd);
@@ -161,7 +167,7 @@ public class SceneSoundManager implements Serializable, AssetConsumer {
 
 		// Retrieve desc from World sound description.
 		for (Entry<String, LoadedSound> e : loadedSounds.entrySet()) {
-			e.getValue().desc = World.getInstance().getSounds().get(e.getKey());
+			e.getValue().desc = w.getSounds().get(e.getKey());
 		}
 	}
 

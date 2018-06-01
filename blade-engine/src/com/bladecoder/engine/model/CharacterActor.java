@@ -276,7 +276,7 @@ public class CharacterActor extends SpriteActor {
 
 			if (dialogs != null) {
 				for (Dialog d : dialogs.values())
-					d.setActor(id);
+					d.setActor(this);
 			}
 			
 			textStyle = json.readValue("textStyle", String.class, jsonData);

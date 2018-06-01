@@ -75,7 +75,7 @@ public class World implements AssetConsumer {
 	private String initScene;
 	private final HashMap<String, SoundDesc> sounds = new HashMap<String, SoundDesc>();
 	private final HashMap<String, Scene> scenes = new HashMap<String, Scene>();
-	private final VerbManager verbs = new VerbManager();
+	private final VerbManager verbs = new VerbManager(this);
 
 	private Scene currentScene;
 	private Dialog currentDialog;
@@ -146,7 +146,7 @@ public class World implements AssetConsumer {
 		scenes.clear();
 		sounds.clear();
 		
-		uiActors = new UIActors();
+		uiActors = new UIActors(this);
 
 		cutMode = false;
 		currentChapter = null;
@@ -185,7 +185,7 @@ public class World implements AssetConsumer {
 			// Allow not link the Blade Ink Engine library if you don't use Ink
 			try {
 				Class.forName("com.bladecoder.ink.runtime.Story");
-				inkManager = new InkManager();
+				inkManager = new InkManager(this);
 			} catch (ClassNotFoundException e) {
 				EngineLogger.debug("WARNING: Blade Ink Library not found.");
 			}
@@ -435,7 +435,7 @@ public class World implements AssetConsumer {
 		return customProperties;
 	}
 	
-	public Map<String, Inventory> getInvetories() {
+	public Map<String, Inventory> getInventories() {
 		return inventories;
 	}
 
@@ -486,7 +486,7 @@ public class World implements AssetConsumer {
 				currentDialog = null;
 		}
 		
-		World.getInstance().getListener().dialogOptions();
+		getListener().dialogOptions();
 	}
 
 	public void setInventory(String inventory) {
@@ -508,7 +508,7 @@ public class World implements AssetConsumer {
 		if (currentDialog != null)
 			setCurrentDialog(currentDialog.selectOption(i));
 		else if (inkManager != null)
-			World.getInstance().getInkManager().selectChoice(i);
+			getInkManager().selectChoice(i);
 	}
 
 	public List<String> getDialogOptions() {

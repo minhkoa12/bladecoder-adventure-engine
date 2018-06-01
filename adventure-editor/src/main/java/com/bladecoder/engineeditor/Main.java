@@ -51,8 +51,8 @@ public class Main extends LwjglApplication {
 	}
 
 	private static void parseArgs(String[] args) {
-		for (int i = 1; i < args.length; i++) {
-			if (args[i - 1].equals("-f")) {
+		for (int i = 0; i < args.length; i++) {
+			if (i > 0 && args[i - 1].equals("-f")) {
 				try {
 					File file = new File(args[i]).getCanonicalFile();
 					Ctx.project.loadProject(file);

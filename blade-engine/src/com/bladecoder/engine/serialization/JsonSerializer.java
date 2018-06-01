@@ -218,12 +218,21 @@ public class JsonSerializer implements Serializable {
 			json.writeValue(Config.VERSION_PROP, Config.getProperty(Config.VERSION_PROP, null));
 			json.writeValue("scenes", w.getScenes(), w.getScenes().getClass(), Scene.class);
 			json.writeValue("currentScene", w.getCurrentScene().getId());
-			json.writeValue("inventories", w.getInvetories());
+			
+			json.writeObjectStart("inventories");
+			for ( Map.Entry<String, Inventory>entry : w.getInventories().entrySet()) {
+				json.writeObjectStart(entry.getKey());
+				InventorySerializer.write(entry.getValue(), json);
+				json.writeObjectEnd();
+			}
+			json.writeObjectEnd();
+			
+			
 			json.writeValue("currentInventory", w.getCurrentInventory());
 			json.writeValue("timeOfGame", w.getTimeOfGame());
 			json.writeValue("cutmode", w.inCutMode());
 			w.getVerbManager().write(json);
-			json.writeValue("customProperties", w.getCustomProperties());
+			json.writeValue("customProperties", w.getCustomProperties(), w.getCustomProperties().getClass(), String.class);
 
 			if (w.getCurrentDialog() != null) {
 				json.writeValue("dialogActor", w.getCurrentDialog().getActor());
@@ -270,7 +279,7 @@ public class JsonSerializer implements Serializable {
 
 			for (int i = 0; i < jsonScenes.size; i++) {
 				JsonValue jsonValue = jsonScenes.get(i);
-				Scene s = new Scene();
+				Scene s = new Scene(w);
 				scenes.put(jsonValue.name, s);
 				s.read(json, jsonValue);
 			}
@@ -332,8 +341,8 @@ public class JsonSerializer implements Serializable {
 			for (int i = 0; i < jsonInventories.size; i++) {
 				JsonValue jsonValue = jsonInventories.get(i);
 				Inventory inv = new Inventory();
-				w.getInvetories().put(jsonValue.name, inv);
-				inv.read(json, jsonValue);
+				w.getInventories().put(jsonValue.name, inv);
+				InventorySerializer.read(w, inv, json, jsonValue);
 			}
 
 			if (jsonData.get("uiActors") != null) {
@@ -360,7 +369,7 @@ public class JsonSerializer implements Serializable {
 
 			for (int i = 0; i < jsonProperties.size; i++) {
 				JsonValue jsonValue = jsonProperties.get(i);
-				props.put(jsonValue.name, jsonValue.asString());
+				props.put(jsonValue.name, json.readValue("value", String.class, jsonData));
 			}
 
 			props.put(WorldProperties.SAVED_GAME_VERSION.toString(), version);
@@ -397,7 +406,7 @@ public class JsonSerializer implements Serializable {
 							String actor = ActionUtils.getStringValue(act, "actor");
 							String play = ActionUtils.getStringValue(act, "play");
 							if (play != null) {
-								SoundDesc sd = World.getInstance().getSounds().get(actor + "_" + play);
+								SoundDesc sd = w.getSounds().get(actor + "_" + play);
 
 								if (sd != null)
 									s.getSoundManager().addSoundToLoad(sd);
@@ -405,7 +414,7 @@ public class JsonSerializer implements Serializable {
 
 						} else if (act instanceof PlaySoundAction) {
 							String sound = ActionUtils.getStringValue(act, "sound");
-							SoundDesc sd = World.getInstance().getSounds().get(sound);
+							SoundDesc sd = w.getSounds().get(sound);
 
 							if (sd != null)
 								s.getSoundManager().addSoundToLoad(sd);
@@ -433,7 +442,7 @@ public class JsonSerializer implements Serializable {
 									String actor = ActionUtils.getStringValue(act, "actor");
 									String play = ActionUtils.getStringValue(act, "play");
 									if (play != null) {
-										SoundDesc sd = World.getInstance().getSounds().get(actor + "_" + play);
+										SoundDesc sd = w.getSounds().get(actor + "_" + play);
 
 										if (sd != null)
 											s.getSoundManager().addSoundToLoad(sd);
@@ -441,7 +450,7 @@ public class JsonSerializer implements Serializable {
 
 								} else if (act instanceof PlaySoundAction) {
 									String sound = ActionUtils.getStringValue(act, "sound");
-									SoundDesc sd = World.getInstance().getSounds().get(sound);
+									SoundDesc sd = w.getSounds().get(sound);
 
 									if (sd != null)
 										s.getSoundManager().addSoundToLoad(sd);
@@ -461,12 +470,12 @@ public class JsonSerializer implements Serializable {
 						if (ad.sound != null) {
 							String sid = ad.sound;
 
-							SoundDesc sd = World.getInstance().getSounds().get(sid);
+							SoundDesc sd = w.getSounds().get(sid);
 
 							if (sd == null)
 								sid = a.getId() + "_" + sid;
 
-							sd = World.getInstance().getSounds().get(sid);
+							sd = w.getSounds().get(sid);
 
 							if (sd != null)
 								s.getSoundManager().addSoundToLoad(sd);

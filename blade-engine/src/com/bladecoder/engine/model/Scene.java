@@ -97,14 +97,24 @@ public class Scene implements Serializable, AssetConsumer {
 	/** internal state. Can be used for actions to maintain a state machine */
 	private String state;
 
-	private VerbManager verbs = new VerbManager();
+	private final VerbManager verbs;
 
-	private SceneSoundManager soundManager = new SceneSoundManager();
+	private final SceneSoundManager soundManager;
 
 	private TextManager textManager = new TextManager();
+	
+	private World w;
 
-	public Scene() {
-		textManager.setWorld(World.getInstance());
+	public Scene(World w) {
+		this.w = w;
+		
+		textManager.setWorld(w);
+		soundManager = new SceneSoundManager(w);
+		verbs = new VerbManager(w);
+	}
+	
+	public World getWorld() {
+		return w;
 	}
 
 	public String getId() {
@@ -170,7 +180,7 @@ public class Scene implements Serializable, AssetConsumer {
 	}
 
 	public void init() {
-		World.getInstance().setCutMode(false);
+		w.setCutMode(false);
 
 		timers.clear();
 		textManager.reset();
@@ -293,11 +303,11 @@ public class Scene implements Serializable, AssetConsumer {
 		BaseActor a = id == null ? null : actors.get(id);
 
 		if (a == null && searchInventory) {
-			a = World.getInstance().getInventory().get(id);
+			a = w.getInventory().get(id);
 
 			// Search the uiActors
 			if (a == null)
-				a = World.getInstance().getUIActors().get(id);
+				a = w.getUIActors().get(id);
 		}
 
 		return a;
@@ -753,7 +763,7 @@ public class Scene implements Serializable, AssetConsumer {
 			for (int i = 0; i < jsonValueActors.size; i++) {
 				JsonValue jsonValueAct = jsonValueActors.get(i);
 				actorRef = new SceneActorRef(jsonValueAct.name);
-				Scene sourceScn = World.getInstance().getScene(actorRef.getSceneId());
+				Scene sourceScn = w.getScene(actorRef.getSceneId());
 
 				if (sourceScn != this) {
 					BaseActor actor = sourceScn.getActor(actorRef.getActorId(), false);
@@ -792,7 +802,7 @@ public class Scene implements Serializable, AssetConsumer {
 
 			if (jsonData.get("textmanager") != null) {
 				textManager = json.readValue("textmanager", TextManager.class, jsonData);
-				textManager.setWorld(World.getInstance());
+				textManager.setWorld(w);
 			}
 		}
 

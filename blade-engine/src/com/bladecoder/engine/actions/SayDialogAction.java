@@ -43,7 +43,7 @@ public class SayDialogAction extends BaseCallbackAction {
 	private World w;
 	
 	@Override
-	public void setWorld(World w) {
+	public void init(World w) {
 		this.w = w;
 	}
 
@@ -62,7 +62,7 @@ public class SayDialogAction extends BaseCallbackAction {
 		
 		responseText = o.getResponseText();
 		responseVoiceId = o.getResponseVoiceId();
-		characterName = w.getCurrentDialog().getActor();
+		characterName = w.getCurrentDialog().getActor().getId();
 		
 		characterTurn = true;
 		previousAnim = null;

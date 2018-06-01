@@ -17,19 +17,11 @@ package com.bladecoder.engine.model;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.SerializationException;
 import com.bladecoder.engine.actions.Action;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
-import com.bladecoder.engine.util.ActionUtils;
 import com.bladecoder.engine.util.EngineLogger;
 
-public class Verb implements VerbRunner, Serializable {
+public class Verb implements VerbRunner {
 	public static final String LOOKAT_VERB = "lookat";
 	public static final String PICKUP_VERB = "pickup";
 	public static final String ACTION_VERB = "action";
@@ -119,7 +111,7 @@ public class Verb implements VerbRunner, Serializable {
 
 	public void run(String currentTarget, ActionCallback cb) {
 		this.currentTarget = currentTarget;
-		this.cb = cb;
+		this.setCb(cb);
 
 		if (EngineLogger.debugMode()) {
 			StringBuilder sb = new StringBuilder(">>> Running verb: ").append(id);
@@ -160,9 +152,9 @@ public class Verb implements VerbRunner, Serializable {
 		if (ip == actions.size()) {
 			EngineLogger.debug(">>> Verb FINISHED: " + id);
 
-			if (cb != null) {
-				ActionCallback cb2 = cb;
-				cb = null;
+			if (getCb() != null) {
+				ActionCallback cb2 = getCb();
+				setCb(null);
 
 				cb2.resume();
 			}
@@ -195,9 +187,9 @@ public class Verb implements VerbRunner, Serializable {
 				((VerbRunner) c).cancel();
 		}
 
-		if (cb != null) {
-			ActionCallback cb2 = cb;
-			cb = null;
+		if (getCb() != null) {
+			ActionCallback cb2 = getCb();
+			setCb(null);
 
 			cb2.resume();
 		}
@@ -205,88 +197,15 @@ public class Verb implements VerbRunner, Serializable {
 		EngineLogger.debug(">>> Verb CANCELLED: " + id);
 	}
 
-	@Override
-	public void write(Json json) {
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			json.writeValue("id", id);
-
-			if (target != null)
-				json.writeValue("target", target);
-
-			if (state != null)
-				json.writeValue("state", state);
-
-			if (icon != null)
-				json.writeValue("icon", icon);
-
-			json.writeArrayStart("actions");
-			for (Action a : actions) {
-				ActionUtils.writeJson(a, json);
-			}
-			json.writeArrayEnd();
-		} else {
-			json.writeValue("ip", ip);
-			json.writeValue("cb", ActionCallbackSerialization.find(cb));
-
-			if (currentTarget != null)
-				json.writeValue("currentTarget", currentTarget);
-
-			json.writeArrayStart("actions");
-			for (Action a : actions) {
-				if (a instanceof Serializable) {
-					json.writeObjectStart();
-					((Serializable) a).write(json);
-					json.writeObjectEnd();
-				}
-			}
-			json.writeArrayEnd();
-		}
+	public ActionCallback getCb() {
+		return cb;
 	}
 
-	@Override
-	public void read(Json json, JsonValue jsonData) {
+	public void setCb(ActionCallback cb) {
+		this.cb = cb;
+	}
 
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			id = json.readValue("id", String.class, jsonData);
-			target = json.readValue("target", String.class, (String) null, jsonData);
-			state = json.readValue("state", String.class, (String) null, jsonData);
-			icon = json.readValue("icon", String.class, (String) null, jsonData);
-
-			actions.clear();
-			JsonValue actionsValue = jsonData.get("actions");
-			for (int i = 0; i < actionsValue.size; i++) {
-				JsonValue aValue = actionsValue.get(i);
-				String clazz = aValue.getString("class");
-
-				try {
-					Action a = ActionUtils.readJson(World.getInstance(), json, aValue);
-					actions.add(a);
-				} catch (SerializationException e) {
-					EngineLogger.error("Error loading action: " + clazz + " " + aValue.toString());
-					throw e;
-				}
-			}
-		} else {
-			// MUTABLE
-			currentTarget = json.readValue("currentTarget", String.class, (String) null, jsonData);
-			ip = json.readValue("ip", Integer.class, jsonData);
-			String sCb = json.readValue("cb", String.class, jsonData);
-			cb = ActionCallbackSerialization.find(sCb);
-
-			JsonValue actionsValue = jsonData.get("actions");
-
-			int i = 0;
-
-			for (Action a : actions) {
-				if (a instanceof Serializable && i < actionsValue.size) {
-					if (actionsValue.get(i) == null)
-						break;
-
-					((Serializable) a).read(json, actionsValue.get(i));
-					i++;
-				}
-			}
-		}
+	public void setCurrentTarget(String currentTarget) {
+		this.currentTarget = currentTarget;
 	}
 }

@@ -17,14 +17,10 @@ package com.bladecoder.engine.model;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
-import com.bladecoder.engine.actions.SceneActorRef;
 import com.bladecoder.engine.assets.AssetConsumer;
 import com.bladecoder.engine.util.EngineLogger;
 
-public class Inventory implements AssetConsumer, Serializable  {
+public class Inventory implements AssetConsumer  {
 	private ArrayList<SpriteActor> items;
 	
 	private boolean visible = true;
@@ -99,6 +95,10 @@ public class Inventory implements AssetConsumer, Serializable  {
 		this.visible = visible;
 	}
 	
+	public ArrayList<SpriteActor> getItems() {
+		return items;
+	}
+	
 	@Override
 	public void loadAssets() {
 		for (SpriteActor a : items)
@@ -124,51 +124,5 @@ public class Inventory implements AssetConsumer, Serializable  {
 	
 	public boolean isDisposed() {
 		return disposed;
-	}
-
-	
-	@Override
-	public void write(Json json) {
-		SceneActorRef actorRef;
-		
-		json.writeValue("visible", visible);
-
-		json.writeObjectStart("items");
-		for (SpriteActor a : items) {
-			actorRef = new SceneActorRef(a.getInitScene(), a.getId());
-			json.writeValue(actorRef.toString(), a);
-		}
-		json.writeObjectEnd();
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		visible = json.readValue("visible", Boolean.class, jsonData);
-		
-		items.clear();
-		
-		JsonValue jsonValueActors = jsonData.get("items");
-		SceneActorRef actorRef;
-
-		// GET ACTORS FROM HIS INIT SCENE.
-		for (int i = 0; i < jsonValueActors.size; i++) {
-			JsonValue jsonValueAct = jsonValueActors.get(i);
-			actorRef = new SceneActorRef(jsonValueAct.name);
-			Scene sourceScn = World.getInstance().getScene(actorRef.getSceneId());
-
-			BaseActor actor = sourceScn.getActor(actorRef.getActorId(), false);
-			sourceScn.removeActor(actor);
-			addItem((SpriteActor)actor);
-		}
-		
-		// READ ACTOR STATE. 
-		// The state must be retrieved after getting actors from his init scene to restore verb cb properly.
-		for (int i = 0; i < jsonValueActors.size; i++) {
-			JsonValue jsonValueAct = jsonValueActors.get(i);
-			actorRef = new SceneActorRef(jsonValueAct.name);
-
-			SpriteActor actor = items.get(i);
-			actor.read(json, jsonValueAct);
-		}
 	}
 }

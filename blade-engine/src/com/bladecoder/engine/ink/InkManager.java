@@ -55,9 +55,13 @@ public class InkManager implements VerbRunner, Serializable {
 	private String storyName;
 
 	private int ip = -1;
+	
+	private World w;
 
-	public InkManager() {
-		externalFunctions = new ExternalFunctions();
+	public InkManager(World w) {
+		this.w = w;
+		
+		externalFunctions = new ExternalFunctions(w);
 		actions = new ArrayList<Action>();
 	}
 
@@ -213,9 +217,9 @@ public class InkManager implements VerbRunner, Serializable {
 		} else {
 
 			if (hasChoices()) {
-				wasInCutmode = World.getInstance().inCutMode();
-				World.getInstance().setCutMode(false);
-				World.getInstance().getListener().dialogOptions();
+				wasInCutmode = w.inCutMode();
+				w.setCutMode(false);
+				w.getListener().dialogOptions();
 			} else if (cb != null || sCb != null) {
 				if (cb == null) {
 					cb = ActionCallbackSerialization.find(sCb);
@@ -275,9 +279,9 @@ public class InkManager implements VerbRunner, Serializable {
 			if (params.get("init") != null)
 				init = Boolean.parseBoolean(params.get("init"));
 
-			World.getInstance().enterScene(params.get("scene"), init);
+			w.enterScene(params.get("scene"), init);
 		} else if ("set".equals(commandName)) {
-			World.getInstance().setModelProp(params.get("prop"), params.get("value"));
+			w.setModelProp(params.get("prop"), params.get("value"));
 		} else {
 
 			// for backward compatibility
@@ -318,7 +322,7 @@ public class InkManager implements VerbRunner, Serializable {
 			}
 		}
 
-		if (!params.containsKey("actor") && World.getInstance().getCurrentScene().getPlayer() != null) {
+		if (!params.containsKey("actor") && w.getCurrentScene().getPlayer() != null) {
 			// params.put("actor", Scene.VAR_PLAYER);
 
 			if (!params.containsKey("type")) {
@@ -440,7 +444,7 @@ public class InkManager implements VerbRunner, Serializable {
 	}
 
 	public void selectChoice(int i) {
-		World.getInstance().setCutMode(wasInCutmode);
+		w.setCutMode(wasInCutmode);
 
 		try {
 			story.chooseChoiceIndex(i);
@@ -539,7 +543,7 @@ public class InkManager implements VerbRunner, Serializable {
 		for (int i = 0; i < actionsValue.size; i++) {
 			JsonValue aValue = actionsValue.get(i);
 
-			Action a = ActionUtils.readJson(World.getInstance(), json, aValue);
+			Action a = ActionUtils.readJson(w, json, aValue);
 			actions.add(a);
 		}
 

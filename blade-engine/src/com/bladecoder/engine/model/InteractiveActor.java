@@ -39,7 +39,7 @@ public class InteractiveActor extends BaseActor implements Comparable<Interactiv
 	/** internal state. Can be used for actions to maintain a state machine */
 	protected String state;
 
-	protected final VerbManager verbs = new VerbManager();
+	protected VerbManager verbs;
 
 	/**
 	 * State to know when the player is inside this actor to trigger the enter/exit
@@ -53,6 +53,12 @@ public class InteractiveActor extends BaseActor implements Comparable<Interactiv
 	 * Characters use this point to walk to the actor.
 	 */
 	private final Vector2 refPoint = new Vector2();
+	
+	@Override
+	public void setScene(Scene s) {
+		super.setScene(s);
+		verbs = new VerbManager(s.getWorld());
+	}
 
 	public void setLayer(String layer) {
 		this.layer = layer;
@@ -221,7 +227,7 @@ public class InteractiveActor extends BaseActor implements Comparable<Interactiv
 			if (sounds != null) {
 				for (Entry<String, SoundDesc> e : sounds.entrySet()) {
 					e.getValue().setId(id + "_" + e.getKey());
-					World.getInstance().getSounds().put(id + "_" + e.getKey(), e.getValue());
+					getScene().getWorld().getSounds().put(id + "_" + e.getKey(), e.getValue());
 				}
 			}
 
