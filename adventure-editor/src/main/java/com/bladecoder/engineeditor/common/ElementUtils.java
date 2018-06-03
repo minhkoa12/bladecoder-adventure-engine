@@ -7,9 +7,9 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.Action;
 import com.bladecoder.engine.model.World;
+import com.bladecoder.engine.serialization.ActionSerializer;
 import com.bladecoder.engine.serialization.SerializationHelper;
 import com.bladecoder.engine.serialization.SerializationHelper.Mode;
-import com.bladecoder.engine.util.ActionUtils;
 
 public class ElementUtils {
 	public static String getCheckedId(String id, String[] values) {
@@ -44,11 +44,11 @@ public class ElementUtils {
 		if (e instanceof Action) {
 			StringWriter buffer = new StringWriter();
 			json.setWriter(buffer);
-			ActionUtils.writeJson((Action) e, json);
+			ActionSerializer.write((Action) e, json);
 			String str = buffer.toString();
 			EditorLogger.debug(str);
 			JsonValue root = new JsonReader().parse(str);
-			return ActionUtils.readJson(World.getInstance(), json, root);
+			return ActionSerializer.read(World.getInstance(), json, root);
 		} else {
 			SerializationHelper.getInstance().setMode(Mode.MODEL);
 			String str = json.toJson(e, (Class<?>) null);

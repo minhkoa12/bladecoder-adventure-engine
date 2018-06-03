@@ -17,6 +17,7 @@ package com.bladecoder.engine.model;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Json.Serializable;
@@ -138,7 +139,13 @@ public class VerbManager implements Serializable {
 
 	@Override
 	public void write(Json json) {
-		json.writeValue("verbs", verbs, verbs.getClass(), Verb.class);
+		json.writeObjectStart("verbs");
+		for ( Map.Entry<String, Verb>entry : verbs.entrySet()) {
+			json.writeObjectStart(entry.getKey());
+			VerbSerializer.write(w, entry.getValue(), json);
+			json.writeObjectEnd();
+		}
+		json.writeObjectEnd();
 	}
 
 	@Override

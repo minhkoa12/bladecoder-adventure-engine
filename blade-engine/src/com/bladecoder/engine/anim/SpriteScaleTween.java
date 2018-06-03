@@ -15,8 +15,6 @@
  ******************************************************************************/
 package com.bladecoder.engine.anim;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.model.SpriteActor;
 import com.bladecoder.engine.util.InterpolationMode;
@@ -26,8 +24,8 @@ import com.bladecoder.engine.util.InterpolationMode;
  */
 public class SpriteScaleTween extends Tween<SpriteActor> {
 	
-	private float startScl;
-	private float targetScl;
+	public float startScl;
+	public float targetScl;
 	
 	public SpriteScaleTween() {
 	}
@@ -53,21 +51,5 @@ public class SpriteScaleTween extends Tween<SpriteActor> {
 	@Override
 	public void updateTarget() {
 		target.setScale(startScl + getPercent() * (targetScl - startScl));
-	}
-	
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("startScl", startScl);
-		json.writeValue("targetScl", targetScl);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);	
-		
-		startScl = json.readValue("startScl", Float.class, jsonData);
-		targetScl = json.readValue("targetScl", Float.class, jsonData);
 	}
 }

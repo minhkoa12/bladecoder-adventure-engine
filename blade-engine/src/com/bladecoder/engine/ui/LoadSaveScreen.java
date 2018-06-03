@@ -116,7 +116,7 @@ public class LoadSaveScreen extends ScreenAdapter implements BladeScreen {
 		float size = DPIUtils.getPrefButtonSize();
 		float pad = DPIUtils.getMarginSize();
 		final Skin skin = ui.getSkin();
-		final World world = World.getInstance();
+		final World world = ui.getWorld();
 
 		// loadScreenMode = ui.getScreen(Screens.LOAD_GAME_SCREEN) == this;
 		loadScreenMode = world.getCurrentScene() == null;
@@ -246,7 +246,7 @@ public class LoadSaveScreen extends ScreenAdapter implements BladeScreen {
 
 	private boolean slotExists(String slot) {
 		String filename = slot + JsonSerializer.GAMESTATE_EXT;
-		return World.getInstance().savedGameExists(filename);
+		return ui.getWorld().savedGameExists(filename);
 	}
 
 	/**
@@ -347,7 +347,7 @@ public class LoadSaveScreen extends ScreenAdapter implements BladeScreen {
 	private ClickListener loadClickListener = new ClickListener() {
 		@Override
 		public void clicked(InputEvent event, float x, float y) {
-			final World world = World.getInstance();
+			final World world = ui.getWorld();
 			final String filename = event.getListenerActor().getName() + JsonSerializer.GAMESTATE_EXT;
 
 			if (world.savedGameExists()) {
@@ -405,7 +405,7 @@ public class LoadSaveScreen extends ScreenAdapter implements BladeScreen {
 			Dialog d = new Dialog("", ui.getSkin()) {
 				protected void result(Object object) {
 					if (((Boolean) object).booleanValue()) {
-						final World world = World.getInstance();
+						final World world = ui.getWorld();
 						final String filename = listenerActor.getName() + JsonSerializer.GAMESTATE_EXT;
 
 						try {
@@ -442,7 +442,7 @@ public class LoadSaveScreen extends ScreenAdapter implements BladeScreen {
 	private ClickListener saveClickListener = new ClickListener() {
 		@Override
 		public void clicked(InputEvent event, float x, float y) {
-			final World world = World.getInstance();
+			final World world = ui.getWorld();
 			final String filename = event.getListenerActor().getName() + JsonSerializer.GAMESTATE_EXT;
 
 			try {

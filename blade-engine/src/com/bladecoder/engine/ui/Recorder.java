@@ -49,10 +49,16 @@ public class Recorder {
 	private float time;
 	private int pos;
 	private String fileName = DEFAULT_RECORD_FILENAME;
+	
+	private World world;
+
+	public Recorder(UI ui) {
+		world = ui.getWorld();
+	}
 
 	public void update(float delta) {
 
-		if (World.getInstance().isPaused())
+		if (world.isPaused())
 			return;
 
 		if (recording) {
@@ -67,17 +73,17 @@ public class Recorder {
 
 			TimeVerb v = list.get(pos);
 
-			Scene s = World.getInstance().getCurrentScene();
+			Scene s = world.getCurrentScene();
 
 			StringBuilder stringBuilder = new StringBuilder();
 			stringBuilder.append("RECORDER - ");
 
 			// while (playing && v.time < time) {
-			if (playing && v.time < time && !World.getInstance().inCutMode()) {
+			if (playing && v.time < time && !world.inCutMode()) {
 				
 				if (v.verb == null) {
 					if (v.pos == null) { // DIALOG OPTION
-						World.getInstance().selectDialogOption(v.dialogOption);
+						world.selectDialogOption(v.dialogOption);
 
 						stringBuilder.append(" SELECT DIALOG OPTION: ").append(v.dialogOption);
 					} else { // GOTO
@@ -136,7 +142,7 @@ public class Recorder {
 			time += WAITING_TIME;
 			v.time = time;
 
-			if (World.getInstance().hasDialogOptions()) {
+			if (world.hasDialogOptions()) {
 				v.dialogOption = dialogOption;
 			}
 
@@ -170,7 +176,7 @@ public class Recorder {
 		if (recording) {
 			EngineLogger.debug("RECORDING...");
 			try {
-				World.getInstance().getSerializer().saveGameState(fileName + GAMESTATE_REC_EXT);
+				world.getSerializer().saveGameState(fileName + GAMESTATE_REC_EXT);
 			} catch (IOException e) {
 				EngineLogger.error(e.getMessage());
 			}
@@ -197,7 +203,7 @@ public class Recorder {
 	public void draw(SpriteBatch batch) {
 		if (recording && ((int) time) % 2 == 0) {
 			// RectangleRenderer.draw(batch, 10,
-			// World.getInstance().getCamera().getViewport().commandHeight - 30,
+			// world.getCamera().getViewport().commandHeight - 30,
 			// 20, 20, Color.RED);
 
 			// TODO: Provisional. Pass viewport to get height
@@ -245,7 +251,7 @@ public class Recorder {
 
 			if (gameStateFile.exists())
 				try {
-					World.getInstance().getSerializer().loadGameState(gameStateFile);
+					world.getSerializer().loadGameState(gameStateFile);
 				} catch (IOException e) {
 					EngineLogger.error(e.getMessage());
 				}

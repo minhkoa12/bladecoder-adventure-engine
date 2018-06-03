@@ -1,11 +1,8 @@
 package com.bladecoder.engine.model;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Application.ApplicationType;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.bladecoder.engine.actions.ActionCallback;
@@ -23,16 +20,16 @@ import com.bladecoder.engine.util.InterpolationMode;
  *
  * @author rgarcia
  */
-public class MusicManager implements Serializable, AssetConsumer {
-	private MusicDesc desc = null;
+public class MusicManager implements AssetConsumer {
+	public MusicDesc desc = null;
 
-	private Music music = null;
+	public Music music = null;
 
-	private float currentMusicDelay = 0;
-	private boolean isPlayingSer = false;
-	private float musicPosSer = 0;
-	transient private boolean isPaused = false;
-	private MusicVolumeTween volumeTween;
+	public float currentMusicDelay = 0;
+	public boolean isPlayingSer = false;
+	public float musicPosSer = 0;
+	transient public boolean isPaused = false;
+	public MusicVolumeTween volumeTween;
 
 	private final Task backgroundLoadingTask = new Task() {
 		@Override
@@ -231,29 +228,5 @@ public class MusicManager implements Serializable, AssetConsumer {
 	public void fade(float volume, float duration, ActionCallback cb) {
 		volumeTween = new MusicVolumeTween();
 		volumeTween.start(this, volume, duration, InterpolationMode.FADE, cb);
-	}
-
-	@Override
-	public void write(Json json) {
-		json.writeValue("desc", desc);
-		json.writeValue("currentMusicDelay", currentMusicDelay);
-		json.writeValue("isPlaying", music != null && (music.isPlaying() || isPaused));
-		json.writeValue("musicPos", music != null && (music.isPlaying() || isPaused) ? music.getPosition() : 0f);
-
-		if (volumeTween != null)
-			json.writeValue("volumeTween", volumeTween);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		desc = json.readValue("desc", MusicDesc.class, jsonData);
-		currentMusicDelay = json.readValue("currentMusicDelay", float.class, jsonData);
-		isPlayingSer = json.readValue("isPlaying", boolean.class, jsonData);
-		musicPosSer = json.readValue("musicPos", float.class, jsonData);
-
-		volumeTween = json.readValue("volumeTween", MusicVolumeTween.class, jsonData);
-		if(volumeTween != null) {
-			volumeTween.setTarget(this);
-		}
 	}
 }

@@ -15,7 +15,6 @@
  ******************************************************************************/
 package com.bladecoder.engine.model;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -25,6 +24,7 @@ import com.badlogic.gdx.utils.Json.Serializable;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.i18n.I18N;
+import com.bladecoder.engine.serialization.TextSerializer;
 import com.bladecoder.engine.util.Config;
 
 /**
@@ -50,15 +50,11 @@ public class TextManager implements Serializable {
 	private Text currentText = null;
 	private final VoiceManager voiceManager = new VoiceManager(this);
 
-	private Queue<Text> fifo;
-	private World world;
+	private final Queue<Text> fifo = new LinkedList<Text>();
+	private final World world;
 
-	public TextManager() {
-		fifo = new LinkedList<Text>();
-	}
-	
-	public void setWorld(World w) {
-		this.world = w;		
+	public TextManager(World w) {
+		this.world = w;
 	}
 
 	public void addText(String str, float x, float y, boolean quee, Text.Type type, Color color, String font,
@@ -68,28 +64,27 @@ public class TextManager implements Serializable {
 			str = I18N.getString(str.substring(1));
 
 		String s = str.replace("\\n", "\n");
-		
-		if(type == Text.Type.UI && world.getListener() != null) {
-			
+
+		if (type == Text.Type.UI && world.getListener() != null) {
+
 			Text t = new Text(s, x, y, 0, type, color, font, actorId, voiceId, null);
-			
+
 			world.getListener().text(t);
-			
-			if(cb != null) {
+
+			if (cb != null) {
 				ActionCallback tmpcb = cb;
 				cb = null;
 				tmpcb.resume();
 			}
-					
+
 			return;
 		}
-		
-		
+
 		String[] text = s.split("\n\n");
 
 		if (!quee)
 			clear();
-		
+
 		String lineVoiceId = voiceId;
 
 		for (int i = 0; i < text.length; i++) {
@@ -109,14 +104,15 @@ public class TextManager implements Serializable {
 				} else {
 					duration = Float.parseFloat(prefix);
 				}
-				
+
 				finalStr = cutStr.substring(idx + 1);
 			}
 
 			Text sub;
 
-			sub = new Text(finalStr, x, y, duration, type, color, font, actorId, lineVoiceId, i == text.length - 1?cb:null);
-			
+			sub = new Text(finalStr, x, y, duration, type, color, font, actorId, lineVoiceId,
+					i == text.length - 1 ? cb : null);
+
 			// resets voice id for the next line
 			lineVoiceId = null;
 
@@ -149,8 +145,8 @@ public class TextManager implements Serializable {
 			voiceManager.play(t.voiceId);
 		else
 			voiceManager.stop();
-		
-		if(world.getListener() != null)
+
+		if (world.getListener() != null)
 			world.getListener().text(t);
 	}
 
@@ -170,9 +166,9 @@ public class TextManager implements Serializable {
 	public void next() {
 		if (currentText != null) {
 			Text t = currentText;
-			
+
 			setCurrentText(fifo.poll());
-			
+
 			t.callCb();
 		}
 	}
@@ -191,7 +187,7 @@ public class TextManager implements Serializable {
 	 */
 	public void reset() {
 		fifo.clear();
-		
+
 		setCurrentText(null);
 	}
 
@@ -199,19 +195,44 @@ public class TextManager implements Serializable {
 	public void write(Json json) {
 		json.writeValue("inScreenTime", inScreenTime);
 
-		if (currentText != null)
-			json.writeValue("currentText", currentText);
+		if (currentText != null) {
+			json.writeObjectStart("currentText");
+			TextSerializer.write(world, currentText, json);
+			json.writeObjectEnd();
+		}
 
-		json.writeValue("fifo", new ArrayList<Text>(fifo), ArrayList.class, Text.class);
+		if (!fifo.isEmpty()) {
+
+			json.writeArrayStart("fifo");
+			for (Text t : fifo) {
+				TextSerializer.write(world, t, json);
+			}
+			json.writeArrayEnd();
+		}
+
 		json.writeValue("voiceManager", voiceManager);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void read(Json json, JsonValue jsonData) {
 		inScreenTime = json.readValue("inScreenTime", Float.class, jsonData);
-		currentText = json.readValue("currentText", Text.class, jsonData);
-		fifo = new LinkedList<Text>(json.readValue("fifo", ArrayList.class, Text.class, jsonData));
+
+		if (jsonData.get("currentText") != null) {
+			currentText = new Text();
+			TextSerializer.read(world, currentText, json, jsonData.get("currentText"));
+		}
+
+		// FIFO
+		fifo.clear();
+		if (jsonData.get("fifo") != null) {
+			JsonValue jsonValueFifo = jsonData.get("fifo");
+			for (int i = 0; i < jsonValueFifo.size; i++) {
+				JsonValue jsonValueAct = jsonValueFifo.get(i);
+				Text t = new Text();
+				TextSerializer.read(world, t, json, jsonValueAct);
+				fifo.add(t);
+			}
+		}
 
 		JsonValue jsonValue = jsonData.get("voiceManager");
 

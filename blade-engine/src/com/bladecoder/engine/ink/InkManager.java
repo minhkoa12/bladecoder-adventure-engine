@@ -21,10 +21,10 @@ import com.bladecoder.engine.actions.ActionFactory;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.i18n.I18N;
 import com.bladecoder.engine.model.Text.Type;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.bladecoder.engine.model.VerbRunner;
 import com.bladecoder.engine.model.World;
-import com.bladecoder.engine.util.ActionUtils;
+import com.bladecoder.engine.serialization.ActionCallbackSerialization;
+import com.bladecoder.engine.serialization.ActionSerializer;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.ink.runtime.Choice;
 import com.bladecoder.ink.runtime.InkList;
@@ -222,7 +222,7 @@ public class InkManager implements VerbRunner, Serializable {
 				w.getListener().dialogOptions();
 			} else if (cb != null || sCb != null) {
 				if (cb == null) {
-					cb = ActionCallbackSerialization.find(sCb);
+					cb = ActionCallbackSerialization.find(w, sCb);
 				}
 
 				ActionCallback tmpcb = cb;
@@ -497,14 +497,14 @@ public class InkManager implements VerbRunner, Serializable {
 		json.writeValue("wasInCutmode", wasInCutmode);
 
 		if (cb == null && sCb != null)
-			cb = ActionCallbackSerialization.find(sCb);
+			cb = ActionCallbackSerialization.find(w, sCb);
 
-		json.writeValue("cb", ActionCallbackSerialization.find(cb));
+		json.writeValue("cb", ActionCallbackSerialization.find(w, cb));
 
 		// SAVE ACTIONS
 		json.writeArrayStart("actions");
 		for (Action a : actions) {
-			ActionUtils.writeJson(a, json);
+			ActionSerializer.write(a, json);
 		}
 		json.writeArrayEnd();
 
@@ -543,7 +543,7 @@ public class InkManager implements VerbRunner, Serializable {
 		for (int i = 0; i < actionsValue.size; i++) {
 			JsonValue aValue = actionsValue.get(i);
 
-			Action a = ActionUtils.readJson(w, json, aValue);
+			Action a = ActionSerializer.read(w, json, aValue);
 			actions.add(a);
 		}
 

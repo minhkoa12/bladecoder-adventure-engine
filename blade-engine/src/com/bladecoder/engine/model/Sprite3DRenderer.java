@@ -16,7 +16,6 @@
 package com.bladecoder.engine.model;
 
 import java.nio.IntBuffer;
-import java.util.HashMap;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -46,15 +45,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.BufferUtils;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
 import com.bladecoder.engine.anim.Tween;
 import com.bladecoder.engine.assets.EngineAssetManager;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.engine.util.Utils3D;
 
@@ -70,8 +64,8 @@ public class Sprite3DRenderer extends AnimationRenderer {
 	private static final Rectangle VIEWPORT = new Rectangle();
 	private final static IntBuffer VIEWPORT_RESULTS = BufferUtils.newIntBuffer(16);
 
-	private int currentCount;
-	private Tween.Type currentAnimationType;
+	public int currentCount;
+	public Tween.Type currentAnimationType;
 
 	private TextureRegion tex;
 
@@ -80,15 +74,15 @@ public class Sprite3DRenderer extends AnimationRenderer {
 
 	private FrameBuffer fb = null;
 
-	private int width = 200, height = 200;
+	public int width = 200, height = 200;
 
-	private Vector3 cameraPos;
-	private Vector3 cameraRot;
+	public Vector3 cameraPos;
+	public Vector3 cameraRot;
 	private String cameraName = "Camera";
 	private float cameraFOV = 49.3f;
 
 	// Rotation of the model in the Y axis
-	private float modelRotation = 0;
+	public float modelRotation = 0;
 
 	// CREATE STATIC BATCHS FOR EFICIENCY
 	private static ModelBatch modelBatch;
@@ -101,15 +95,15 @@ public class Sprite3DRenderer extends AnimationRenderer {
 	private final DirectionalShadowLight shadowLight = (DirectionalShadowLight) new DirectionalShadowLight(1024, 1024,
 			30f, 30f, 1f, 100f).set(1f, 1f, 1f, 0.01f, -1f, 0.01f);
 
-	PointLight celLight;
+	private PointLight celLight;
 
-	String celLightName = "Light";
+	private String celLightName = "Light";
 
-	private ActionCallback animationCb = null;
+	public ActionCallback animationCb = null;
 
-	private float lastAnimationTime = 0;
+	public float lastAnimationTime = 0;
 
-	private boolean renderShadow = true;
+	public boolean renderShadow = true;
 
 	class ModelCacheEntry extends CacheEntry {
 		ModelInstance modelInstance;
@@ -722,62 +716,4 @@ public class Sprite3DRenderer extends AnimationRenderer {
 
 		modelBatch = shadowBatch = floorBatch = null;
 	}
-
-	@Override
-	public void write(Json json) {
-		super.write(json);
-		
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			float worldScale = EngineAssetManager.getInstance().getScale();
-			json.writeValue("width", width / worldScale);
-			json.writeValue("height", height / worldScale);
-			json.writeValue("cameraPos", cameraPos, cameraPos == null ? null : Vector3.class);
-			json.writeValue("cameraRot", cameraRot, cameraRot == null ? null : Vector3.class);
-			json.writeValue("cameraName", cameraName, cameraName == null ? null : String.class);
-			json.writeValue("cameraFOV", cameraFOV);
-			json.writeValue("renderShadow", renderShadow);
-		} else {
-
-
-			json.writeValue("animationCb", ActionCallbackSerialization.find(animationCb));
-
-			json.writeValue("currentCount", currentCount);
-			json.writeValue("currentAnimationType", currentAnimationType);
-			json.writeValue("lastAnimationTime", lastAnimationTime);
-
-			// TODO: SAVE AND RESTORE CURRENT DIRECTION
-			// TODO: shadowlight, cel light
-		}
-
-		json.writeValue("modelRotation", modelRotation);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-		
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			fanims = json.readValue("fanims", HashMap.class, AnimationDesc.class, jsonData);
-			
-			float worldScale = EngineAssetManager.getInstance().getScale();
-			width = (int) (json.readValue("width", Integer.class, jsonData) * worldScale);
-			height = (int) (json.readValue("height", Integer.class, jsonData) * worldScale);
-			cameraPos = json.readValue("cameraPos", Vector3.class, jsonData);
-			cameraRot = json.readValue("cameraRot", Vector3.class, jsonData);
-			cameraName = json.readValue("cameraName", String.class, jsonData);
-			cameraFOV = json.readValue("cameraFOV", Float.class, jsonData);
-			renderShadow = json.readValue("renderShadow", Boolean.class, jsonData);
-		} else {
-
-			animationCb = ActionCallbackSerialization.find(json.readValue("animationCb", String.class, jsonData));
-
-			currentCount = json.readValue("currentCount", Integer.class, jsonData);
-			currentAnimationType = json.readValue("currentAnimationType", Tween.Type.class, jsonData);
-			lastAnimationTime = json.readValue("lastAnimationTime", Float.class, jsonData);
-		}
-
-		modelRotation = json.readValue("modelRotation", Float.class, jsonData);
-	}
-
 }

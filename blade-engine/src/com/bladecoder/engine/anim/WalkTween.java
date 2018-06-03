@@ -18,25 +18,21 @@ package com.bladecoder.engine.anim;
 import java.util.ArrayList;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.model.CharacterActor;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.bladecoder.engine.util.InterpolationMode;
 
 /**
  * Tween for frame animation
  */
-public class WalkTween extends SpritePosTween implements Serializable {
+public class WalkTween extends SpritePosTween {
 
-	private ArrayList<Vector2> walkingPath;
-	private int currentStep = 0;
-	private float speed = 0;
+	public ArrayList<Vector2> walkingPath;
+	public int currentStep = 0;
+	public float speed = 0;
 
-	private ActionCallback walkCb;
+	public ActionCallback walkCb;
 
 	public WalkTween() {
 	}
@@ -121,29 +117,5 @@ public class WalkTween extends SpritePosTween implements Serializable {
 
 		if (isComplete())
 			segmentEnded((CharacterActor) target);
-	}
-
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("path", walkingPath);
-		json.writeValue("currentStep", currentStep);
-		json.writeValue("speed", speed);
-
-		json.writeValue("walkCb", ActionCallbackSerialization.find(walkCb), walkCb == null ? null : String.class);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-
-		walkingPath = json.readValue("path", ArrayList.class, Vector2.class, jsonData);
-		currentStep = json.readValue("currentStep", Integer.class, jsonData);
-		speed = json.readValue("speed", Float.class, jsonData);
-
-		String walkCbSer = json.readValue("walkCb", String.class, jsonData);
-		walkCb = ActionCallbackSerialization.find(walkCbSer);
 	}
 }

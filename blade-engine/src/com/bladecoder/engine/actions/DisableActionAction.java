@@ -22,7 +22,7 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.model.VerbRunner;
 import com.bladecoder.engine.model.World;
-import com.bladecoder.engine.util.ActionUtils;
+import com.bladecoder.engine.serialization.ActionSerializer;
 
 /**
  * This action wraps an action that has been disabled.
@@ -53,7 +53,7 @@ public class DisableActionAction implements Action {
 		Json json = new Json();
 		StringWriter buffer = new StringWriter();
 		json.setWriter(buffer);
-		ActionUtils.writeJson(a, json);
+		ActionSerializer.write(a, json);
 		serializedAction = buffer.toString();
 	}
 	
@@ -61,7 +61,7 @@ public class DisableActionAction implements Action {
 		if(action == null) {
 			Json json = new Json();
 			JsonValue root = new JsonReader().parse(serializedAction);
-			action =  ActionUtils.readJson(w, json, root);
+			action =  ActionSerializer.read(w, json, root);
 		}
 		
 		return action;

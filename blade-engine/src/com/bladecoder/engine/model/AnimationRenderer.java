@@ -20,13 +20,9 @@ import java.util.HashMap;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
 import com.bladecoder.engine.anim.Tween;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 
 public abstract class AnimationRenderer implements ActorRenderer {
 	
@@ -42,24 +38,22 @@ public abstract class AnimationRenderer implements ActorRenderer {
 	
 	private final static float DEFAULT_DIM = 200;
 	
-	protected HashMap<String, AnimationDesc> fanims = new HashMap<String, AnimationDesc>();
+	public HashMap<String, AnimationDesc> fanims = new HashMap<String, AnimationDesc>();
+	public AnimationDesc currentAnimation;
+	public boolean flipX;
+
 
 	/** Starts this anim the first time that the scene is loaded */
 	protected String initAnimation;
-
-	protected AnimationDesc currentAnimation;
-
+	
+	protected int orgAlign = Align.left;
 	protected CacheEntry currentSource;
-	protected boolean flipX;
-
 	protected final HashMap<String, CacheEntry> sourceCache = new HashMap<String, CacheEntry>();
 	protected Polygon bbox;
 
 	public class CacheEntry {
 		public int refCounter;
 	}
-	
-	protected int orgAlign = Align.left;
 	
 	public abstract void startAnimation(String id, Tween.Type repeatType,
 			int count, ActionCallback cb);
@@ -373,49 +367,6 @@ public abstract class AnimationRenderer implements ActorRenderer {
 			return 0;
 
 		return -1;
-	}
-	
-
-	@Override
-	public void write(Json json) {
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
-			json.writeValue("fanims", fanims, HashMap.class, null);
-			json.writeValue("initAnimation", initAnimation);
-			json.writeValue("orgAlign", orgAlign);
-
-		} else {
-
-			String currentAnimationId = null;
-
-			if (currentAnimation != null)
-				currentAnimationId = currentAnimation.id;
-
-			json.writeValue("currentAnimation", currentAnimationId);
-
-			json.writeValue("flipX", flipX);
-		}
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
-			// In next versions, the fanims loading will be generic
-			// fanims = json.readValue("fanims", HashMap.class, AnimationDesc.class, jsonData);
-			
-			initAnimation = json.readValue("initAnimation", String.class, jsonData);
-			orgAlign = json.readValue("orgAlign", int.class, Align.bottom, jsonData);
-		} else {
-
-			String currentAnimationId = json.readValue("currentAnimation", String.class, jsonData);
-
-			if (currentAnimationId != null)
-				currentAnimation = fanims.get(currentAnimationId);
-			flipX = json.readValue("flipX", Boolean.class, jsonData);
-		}
 	}
 }
 

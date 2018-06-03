@@ -16,8 +16,6 @@
 package com.bladecoder.engine.anim;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.model.SpriteActor;
 import com.bladecoder.engine.util.InterpolationMode;
@@ -27,11 +25,9 @@ import com.bladecoder.engine.util.InterpolationMode;
  */
 public class SpriteTintTween extends Tween<SpriteActor> {
 	
-	private Color startColor;
-	private Color targetColor;
+	public Color startColor;
+	public Color targetColor;
 	
-	public SpriteTintTween() {
-	}
 
 	public void start(SpriteActor target, Type repeatType, int count, Color tColor, float duration, InterpolationMode interpolation, ActionCallback cb) {
 		
@@ -62,21 +58,5 @@ public class SpriteTintTween extends Tween<SpriteActor> {
 		target.getTint().r = startColor.r + getPercent() * (targetColor.r - startColor.r);
 		target.getTint().g = startColor.g + getPercent() * (targetColor.g - startColor.g);
 		target.getTint().b = startColor.b + getPercent() * (targetColor.b - startColor.b);
-	}
-	
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("startColor", startColor);
-		json.writeValue("targetColor", targetColor);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);	
-		
-		startColor = json.readValue("startColor", Color.class, Color.WHITE, jsonData);
-		targetColor = json.readValue("targetColor", Color.class, Color.WHITE, jsonData);
 	}
 }

@@ -18,10 +18,9 @@ package com.bladecoder.engine.model;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.utils.Json.Serializable;
 import com.bladecoder.engine.assets.AssetConsumer;
 
-public interface ActorRenderer extends Serializable, AssetConsumer {
+public interface ActorRenderer extends AssetConsumer {
 
 	public void update(float delta);
 	public void draw(SpriteBatch batch, float x, float y, float scale, float rotation, Color tint);

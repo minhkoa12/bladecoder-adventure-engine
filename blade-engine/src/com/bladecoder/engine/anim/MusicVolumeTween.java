@@ -15,8 +15,6 @@
  ******************************************************************************/
 package com.bladecoder.engine.anim;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.model.MusicManager;
 import com.bladecoder.engine.util.InterpolationMode;
@@ -26,8 +24,8 @@ import com.bladecoder.engine.util.InterpolationMode;
  */
 public class MusicVolumeTween extends Tween<MusicManager> {
 	
-	private float startVolume;
-	private float targetVolume;
+	public float startVolume;
+	public float targetVolume;
 	
 	public MusicVolumeTween() {
 	}
@@ -53,21 +51,5 @@ public class MusicVolumeTween extends Tween<MusicManager> {
 	@Override
 	public void updateTarget() {
 		target.setVolume(startVolume + getPercent() * (targetVolume - startVolume));
-	}
-	
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("startVolume", startVolume);
-		json.writeValue("targetVolume", targetVolume);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);	
-		
-		startVolume = json.readValue("startVolume", Float.class, 1f, jsonData);
-		targetVolume = json.readValue("targetVolume", Float.class, 1f, jsonData);
 	}
 }

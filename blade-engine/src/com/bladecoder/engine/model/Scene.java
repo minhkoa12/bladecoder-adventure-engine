@@ -29,21 +29,15 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.actions.SceneActorRef;
 import com.bladecoder.engine.anim.Timers;
 import com.bladecoder.engine.assets.AssetConsumer;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.polygonalpathfinder.NavNodePolygonal;
 import com.bladecoder.engine.polygonalpathfinder.PolygonalNavGraph;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 
-public class Scene implements Serializable, AssetConsumer {
+public class Scene implements AssetConsumer {
 
 	public static final Color ACTOR_BBOX_COLOR = new Color(0.2f, 0.2f, 0.8f, 1f);
 	public static final Color WALKZONE_COLOR = Color.GREEN;
@@ -56,14 +50,14 @@ public class Scene implements Serializable, AssetConsumer {
 	/**
 	 * All actors in the scene
 	 */
-	private Map<String, BaseActor> actors = new ConcurrentHashMap<String, BaseActor>();
+	private final Map<String, BaseActor> actors = new ConcurrentHashMap<String, BaseActor>();
 
 	/**
 	 * BaseActor layers
 	 */
-	private List<SceneLayer> layers = new ArrayList<SceneLayer>();
+	private final List<SceneLayer> layers = new ArrayList<SceneLayer>();
 
-	private Timers timers = new Timers();
+	private final Timers timers = new Timers();
 
 	private SceneCamera camera = new SceneCamera();
 
@@ -101,14 +95,14 @@ public class Scene implements Serializable, AssetConsumer {
 
 	private final SceneSoundManager soundManager;
 
-	private TextManager textManager = new TextManager();
+	private final TextManager textManager;
 	
 	private World w;
 
 	public Scene(World w) {
 		this.w = w;
 		
-		textManager.setWorld(w);
+		textManager = new TextManager(w);
 		soundManager = new SceneSoundManager(w);
 		verbs = new VerbManager(w);
 	}
@@ -661,153 +655,5 @@ public class Scene implements Serializable, AssetConsumer {
 
 	public void setPolygonalNavGraph(PolygonalNavGraph polygonalNavGraph) {
 		this.polygonalNavGraph = polygonalNavGraph;
-	}
-
-	@Override
-	public void write(Json json) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
-			json.writeValue("id", id);
-			json.writeValue("layers", layers, layers.getClass(), SceneLayer.class);
-
-			json.writeValue("actors", actors);
-
-			if (backgroundAtlas != null) {
-				json.writeValue("backgroundAtlas", backgroundAtlas);
-				json.writeValue("backgroundRegionId", backgroundRegionId);
-			}
-
-			json.writeValue("musicDesc", musicDesc);
-
-			if (depthVector != null)
-				json.writeValue("depthVector", depthVector);
-
-			if (polygonalNavGraph != null)
-				json.writeValue("polygonalNavGraph", polygonalNavGraph);
-
-			if (sceneSize != null)
-				json.writeValue("sceneSize", sceneSize);
-
-		} else {
-			SceneActorRef actorRef;
-
-			json.writeObjectStart("actors");
-			for (BaseActor a : actors.values()) {
-				actorRef = new SceneActorRef(a.getInitScene(), a.getId());
-				json.writeValue(actorRef.toString(), a);
-			}
-			json.writeObjectEnd();
-
-			json.writeValue("camera", camera);
-
-			if (followActor != null)
-				json.writeValue("followActor", followActor.getId());
-
-			soundManager.write(json);
-
-			if (!timers.isEmpty())
-				json.writeValue("timers", timers);
-
-			if (textManager.getCurrentText() != null)
-				json.writeValue("textmanager", textManager);
-		}
-
-		verbs.write(json);
-
-		if (state != null)
-			json.writeValue("state", state);
-
-		if (player != null)
-			json.writeValue("player", player);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
-			id = json.readValue("id", String.class, jsonData);
-			layers = json.readValue("layers", ArrayList.class, SceneLayer.class, jsonData);
-			actors = json.readValue("actors", ConcurrentHashMap.class, BaseActor.class, jsonData);
-
-			for (BaseActor actor : actors.values()) {
-				actor.setScene(this);
-				actor.setInitScene(id);
-
-				if (actor instanceof InteractiveActor) {
-					InteractiveActor ia = (InteractiveActor) actor;
-
-					SceneLayer layer = getLayer(ia.getLayer());
-					layer.add(ia);
-				}
-			}
-
-			orderLayersByZIndex();
-
-			backgroundAtlas = json.readValue("backgroundAtlas", String.class, jsonData);
-			backgroundRegionId = json.readValue("backgroundRegionId", String.class, jsonData);
-
-			musicDesc = json.readValue("musicDesc", MusicDesc.class, jsonData);
-
-			depthVector = json.readValue("depthVector", Vector2.class, jsonData);
-
-			polygonalNavGraph = json.readValue("polygonalNavGraph", PolygonalNavGraph.class, jsonData);
-
-			sceneSize = json.readValue("sceneSize", Vector2.class, jsonData);
-
-		} else {
-			JsonValue jsonValueActors = jsonData.get("actors");
-			SceneActorRef actorRef;
-
-			// GET ACTORS FROM HIS INIT SCENE AND MOVE IT TO THE LOADING SCENE.
-			for (int i = 0; i < jsonValueActors.size; i++) {
-				JsonValue jsonValueAct = jsonValueActors.get(i);
-				actorRef = new SceneActorRef(jsonValueAct.name);
-				Scene sourceScn = w.getScene(actorRef.getSceneId());
-
-				if (sourceScn != this) {
-					BaseActor actor = sourceScn.getActor(actorRef.getActorId(), false);
-					sourceScn.removeActor(actor);
-					addActor(actor);
-				}
-			}
-
-			// READ ACTOR STATE.
-			// The state must be retrieved after getting actors from his init
-			// scene to restore verb cb properly.
-			for (int i = 0; i < jsonValueActors.size; i++) {
-				JsonValue jsonValueAct = jsonValueActors.get(i);
-				actorRef = new SceneActorRef(jsonValueAct.name);
-
-				BaseActor actor = getActor(actorRef.getActorId(), false);
-
-				if (actor != null)
-					actor.read(json, jsonValueAct);
-				else
-					EngineLogger.debug("Actor not found: " + actorRef);
-			}
-
-			orderLayersByZIndex();
-
-			camera = json.readValue("camera", SceneCamera.class, jsonData);
-			String followActorId = json.readValue("followActor", String.class, jsonData);
-
-			if (followActor != null)
-				setCameraFollowActor((SpriteActor) actors.get(followActorId));
-
-			soundManager.read(json, jsonData);
-
-			if (jsonData.get("timers") != null)
-				timers = json.readValue("timers", Timers.class, jsonData);
-
-			if (jsonData.get("textmanager") != null) {
-				textManager = json.readValue("textmanager", TextManager.class, jsonData);
-				textManager.setWorld(w);
-			}
-		}
-
-		verbs.read(json, jsonData);
-		state = json.readValue("state", String.class, jsonData);
-		player = json.readValue("player", String.class, jsonData);
 	}
 }

@@ -15,21 +15,15 @@
  ******************************************************************************/
 package com.bladecoder.engine.model;
 
-import java.util.HashMap;
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
 import com.bladecoder.engine.anim.Tween;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.i18n.I18N;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.engine.util.RectangleRenderer;
 
@@ -282,18 +276,5 @@ public class ImageRenderer extends AnimationRenderer {
 
 		sourceCache.clear();
 		currentSource = null;
-	}
-	
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			fanims = json.readValue("fanims", HashMap.class, AnimationDesc.class, jsonData);
-		} else {
-
-		}
 	}
 }

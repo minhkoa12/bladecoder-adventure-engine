@@ -15,8 +15,6 @@
  ******************************************************************************/
 package com.bladecoder.engine.anim;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.model.SpriteActor;
 import com.bladecoder.engine.util.InterpolationMode;
@@ -26,8 +24,8 @@ import com.bladecoder.engine.util.InterpolationMode;
  */
 public class SpriteRotateTween extends Tween<SpriteActor> {
 	
-	private float startRot;
-	private float targetRot;
+	public float startRot;
+	public float targetRot;
 	
 	public SpriteRotateTween() {
 	}
@@ -53,21 +51,5 @@ public class SpriteRotateTween extends Tween<SpriteActor> {
 	@Override
 	public void updateTarget() {
 		target.setRot(startRot + getPercent() * (targetRot - startRot));
-	}
-	
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("startRot", startRot);
-		json.writeValue("targetRot", targetRot);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);	
-		
-		startRot = json.readValue("startRot", Float.class, jsonData);
-		targetRot = json.readValue("targetRot", Float.class, jsonData);
 	}
 }

@@ -180,7 +180,7 @@ public class ActionCallbackSerialization {
 	 *            The ActionCallback to serialize
 	 * @return The generated location string
 	 */
-	public static String find(ActionCallback cb) {
+	public static String find(World w, ActionCallback cb) {
 		String id = null;
 
 		if (cb == null)
@@ -188,25 +188,25 @@ public class ActionCallbackSerialization {
 		
 
 		// search in UIActors
-		id = find(cb, World.getInstance().getUIActors());
+		id = find(cb, w.getUIActors());
 
 		if (id != null)
 			return id;
 		
 		// search in inventory
-		id = find(cb, World.getInstance().getInventory());
+		id = find(cb, w.getInventory());
 
 		if (id != null)
 			return id;
 
 		// search in inkManager actions
-		id = find(cb, World.getInstance().getInkManager());
+		id = find(cb, w.getInkManager());
 
 		if (id != null)
 			return id;
 
 		// search in scene verbs
-		Scene s = World.getInstance().getCurrentScene();
+		Scene s = w.getCurrentScene();
 
 		id = find(cb, s);
 
@@ -229,7 +229,7 @@ public class ActionCallbackSerialization {
 		}
 
 		// search in worldVerbs
-		for (Verb v : World.getInstance().getVerbManager().getVerbs().values()) {
+		for (Verb v : w.getVerbManager().getVerbs().values()) {
 			id = find(cb, v);
 			if (id != null) {
 				StringBuilder stringBuilder = new StringBuilder(DEFAULT_VERB_TAG);
@@ -247,21 +247,21 @@ public class ActionCallbackSerialization {
 	 * 
 	 * @param id
 	 */
-	public static ActionCallback find(String id) {
+	public static ActionCallback find(World w, String id) {
 
 		if (id == null)
 			return null;
 
-		Scene s = World.getInstance().getCurrentScene();
+		Scene s = w.getCurrentScene();
 
 		String[] split = id.split(SEPARATION_SYMBOL);
 
 		if (id.startsWith(INK_MANAGER_TAG)) {
 			if (split.length == 1)
-				return World.getInstance().getInkManager();
+				return w.getInkManager();
 
 			int actionPos = Integer.parseInt(split[1]);
-			Action action = World.getInstance().getInkManager().getActions().get(actionPos);
+			Action action = w.getInkManager().getActions().get(actionPos);
 
 			if (action instanceof ActionCallback)
 				return (ActionCallback) action;
@@ -292,7 +292,7 @@ public class ActionCallbackSerialization {
 		Verb v = null;
 
 		if (actorId.equals(DEFAULT_VERB_TAG)) {
-			v = World.getInstance().getVerbManager().getVerb(verbId, null, null);
+			v = w.getVerbManager().getVerb(verbId, null, null);
 		} else {
 
 			InteractiveActor a;

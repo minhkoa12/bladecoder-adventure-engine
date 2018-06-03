@@ -19,15 +19,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 
 public class Timers {
-	private List<Timer> timers = new ArrayList<>(3);
-	private List<Timer> timersTmp = new ArrayList<>(3);
+	private final List<Timer> timers = new ArrayList<>(3);
+	transient private List<Timer> timersTmp = new ArrayList<>(3);
 
 	public void addTimer(float time, ActionCallback cb) {
 		Timer t = new Timer();
@@ -36,6 +32,10 @@ public class Timers {
 		t.cb = cb;
 
 		timers.add(t);
+	}
+	
+	public List<Timer> getTimers() {
+		return timers;
 	}
 
 	public void clear() {
@@ -85,24 +85,9 @@ public class Timers {
 		}
 	}
 
-	private static class Timer implements Serializable {
-		private float time;
-		private float currentTime = 0;
-		private ActionCallback cb;
-
-		@Override
-		public void write(Json json) {
-			json.writeValue("time", time);
-			json.writeValue("currentTime", currentTime);
-			json.writeValue("cb", ActionCallbackSerialization.find(cb), cb == null ? null : String.class);
-		}
-
-		@Override
-		public void read(Json json, JsonValue jsonData) {
-			time = json.readValue("time", Float.class, jsonData);
-			currentTime = json.readValue("currentTime", Float.class, jsonData);
-			String cbSer = json.readValue("cb", String.class, jsonData);
-			cb = ActionCallbackSerialization.find(cbSer);
-		}
+	public static class Timer {
+		public float time;
+		public float currentTime = 0;
+		public ActionCallback cb;
 	}
 }

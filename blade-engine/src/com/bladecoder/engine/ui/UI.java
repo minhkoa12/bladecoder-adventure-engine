@@ -35,8 +35,8 @@ public class UI {
 
 	private static final String SKIN_FILENAME = "ui/ui.json";
 
-	private final Recorder recorder = new Recorder();
-	private final TesterBot testerBot = new TesterBot();
+	private final Recorder recorder = new Recorder(this);
+	private final TesterBot testerBot = new TesterBot(this);
 	
 	private boolean fullscreen = false;
 
@@ -44,6 +44,8 @@ public class UI {
 
 	private SpriteBatch batch;
 	private Skin skin;
+	
+	private World world;
 
 	public enum Screens {
 		INIT_SCREEN, SCENE_SCREEN, LOADING_SCREEN, MENU_SCREEN, HELP_SCREEN, CREDIT_SCREEN, LOAD_GAME_SCREEN, SAVE_GAME_SCREEN
@@ -51,7 +53,9 @@ public class UI {
 
 	private final BladeScreen screens[];
 
-	public UI() {
+	public UI(World w) {
+		this.world = w;
+		
 		batch = new SpriteBatch();
 		
 		screens = new BladeScreen[Screens.values().length];
@@ -73,6 +77,10 @@ public class UI {
 			s.setUI(this);
 
 		setCurrentScreen(Screens.INIT_SCREEN);
+	}
+	
+	public World getWorld() {
+		return world;
 	}
 	
 	public Recorder getRecorder() {
@@ -186,7 +194,7 @@ public class UI {
 			Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 			fullscreen = true;
 		} else {
-			Gdx.graphics.setWindowedMode(World.getInstance().getWidth(), World
+			Gdx.graphics.setWindowedMode(world.getWidth(), World
 					.getInstance().getHeight());
 			fullscreen = false;
 		}

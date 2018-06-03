@@ -17,8 +17,9 @@ package com.bladecoder.engine.actions;
 
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.Json.Serializable;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.badlogic.gdx.utils.JsonValue;
+import com.bladecoder.engine.model.World;
+import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 
 public abstract class BaseCallbackAction implements Action, ActionCallback, Serializable {
 	private ActionCallback verbCb;
@@ -30,13 +31,20 @@ public abstract class BaseCallbackAction implements Action, ActionCallback, Seri
 	@ActionProperty(required = true)
 	@ActionPropertyDescription("If this param is 'false' the text is showed and the action continues inmediatly")
 	private boolean wait = true;
+	
+	protected World w;
+	
+	@Override
+	public void init(World w) {
+		this.w = w;
+	}
 
 	@Override
 	public void resume() {
 		if (verbCb != null || sCb != null) {
 
 			if (verbCb == null) {
-				verbCb = ActionCallbackSerialization.find(sCb);
+				verbCb = ActionCallbackSerialization.find(w, sCb);
 			}
 
 			ActionCallback cb2 = verbCb;
@@ -61,7 +69,7 @@ public abstract class BaseCallbackAction implements Action, ActionCallback, Seri
 
 	@Override
 	public void write(Json json) {
-		json.writeValue("cb", ActionCallbackSerialization.find(verbCb));
+		json.writeValue("cb", ActionCallbackSerialization.find(w, verbCb));
 	}
 
 	@Override

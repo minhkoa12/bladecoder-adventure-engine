@@ -22,6 +22,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
 import com.bladecoder.engine.anim.Tween;
@@ -29,20 +31,22 @@ import com.bladecoder.engine.anim.Tween.Type;
 import com.bladecoder.engine.anim.WalkTween;
 import com.bladecoder.engine.assets.AssetConsumer;
 import com.bladecoder.engine.assets.EngineAssetManager;
+import com.bladecoder.engine.serialization.RendererSerializer;
 import com.bladecoder.engine.serialization.SerializationHelper;
 import com.bladecoder.engine.serialization.SerializationHelper.Mode;
+import com.bladecoder.engine.serialization.TweenSerializer;
 import com.bladecoder.engine.util.EngineLogger;
 
 public class SpriteActor extends InteractiveActor implements AssetConsumer {
 
 	protected ActorRenderer renderer;
 
-	protected ArrayList<Tween<SpriteActor>> tweens = new ArrayList<>(0);
+	protected final ArrayList<Tween<SpriteActor>> tweens = new ArrayList<>(0);
 
 	private float rot = 0.0f;
 	private float scale = 1.0f;
 	private Color tint;
-	
+
 	private boolean fakeDepth = false;
 
 	private boolean bboxFromRenderer = false;
@@ -115,8 +119,8 @@ public class SpriteActor extends InteractiveActor implements AssetConsumer {
 
 	public void setScale(float scale) {
 		this.scale = scale;
-		
-		if(bboxFromRenderer)
+
+		if (bboxFromRenderer)
 			bbox.setScale(scale, scale);
 		else {
 			float worldScale = EngineAssetManager.getInstance().getScale();
@@ -312,11 +316,26 @@ public class SpriteActor extends InteractiveActor implements AssetConsumer {
 		}
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			json.writeValue("renderer", renderer, null);
+			json.writeObjectStart("renderer", renderer.getClass(), null);
+			RendererSerializer.write(getScene().getWorld(), renderer, json);
+			json.writeObjectEnd();
 		} else {
-			json.writeValue("renderer", renderer);
-			json.writeValue("tweens", tweens, ArrayList.class, Tween.class);
+
+			json.writeObjectStart("renderer");
+			RendererSerializer.write(getScene().getWorld(), renderer, json);
+			json.writeObjectEnd();
+
 			json.writeValue("playingSound", playingSound);
+
+			// TWEENS
+			if (!tweens.isEmpty()) {
+
+				json.writeArrayStart("tweens");
+				for (Tween<?> t : tweens) {
+					TweenSerializer.write(getScene().getWorld(), t, json);
+				}
+				json.writeArrayEnd();
+			}
 		}
 
 		json.writeValue("scale", scale);
@@ -332,32 +351,62 @@ public class SpriteActor extends InteractiveActor implements AssetConsumer {
 		super.read(json, jsonData);
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			renderer = json.readValue("renderer", ActorRenderer.class, jsonData);
+			// RENDERER
+			JsonValue jsonValueR = jsonData.get("renderer");
+			String clazz = jsonValueR.getString("class");
+
+			Class<?> c;
+			try {
+				c = Class.forName(clazz);
+				renderer = (ActorRenderer) ClassReflection.newInstance(c);
+
+			} catch (ClassNotFoundException | ReflectionException e) {
+				EngineLogger.error("Error loading Renderer: " + clazz);
+				return;
+			}
 		} else {
-			tweens = json.readValue("tweens", ArrayList.class, Tween.class, jsonData);
 
-			for (Tween<SpriteActor> t : tweens)
-				t.setTarget(this);
+			// TWEENS
+			if (jsonData.get("tweens") != null) {
+				JsonValue jsonValueTweens = jsonData.get("tweens");
+				for (int i = 0; i < jsonValueTweens.size; i++) {
+					JsonValue jsonValueAct = jsonValueTweens.get(i);
+					String clazz = jsonValueAct.getString("class");
 
-			renderer.read(json, jsonData.get("renderer"));
+					Class<?> c;
+					try {
+						c = Class.forName(clazz);
+						Tween<SpriteActor> tween = (Tween<SpriteActor>) ClassReflection.newInstance(c);
+
+						tween.setTarget(this);
+
+						TweenSerializer.read(getScene().getWorld(), tween, json, jsonValueAct);
+						tweens.add(tween);
+					} catch (ClassNotFoundException | ReflectionException e) {
+						EngineLogger.error("Error loading Tween: " + clazz);
+						continue;
+					}
+				}
+			}
 
 			playingSound = json.readValue("playingSound", String.class, jsonData);
 		}
+		
+		RendererSerializer.read(getScene().getWorld(), renderer, json, jsonData.get("renderer"));
 
 		scale = json.readValue("scale", float.class, scale, jsonData);
 		rot = json.readValue("rot", float.class, rot, jsonData);
 		tint = json.readValue("tint", Color.class, tint, jsonData);
 
 		// backwards compatibility fakeDepth
-		if(jsonData.get("depthType") != null) {
-			String depthType = json.readValue("depthType", String.class, (String)null, jsonData);
-			
+		if (jsonData.get("depthType") != null) {
+			String depthType = json.readValue("depthType", String.class, (String) null, jsonData);
+
 			fakeDepth = "VECTOR".equals(depthType);
 		} else {
 			fakeDepth = json.readValue("fakeDepth", boolean.class, fakeDepth, jsonData);
 		}
-		
-		
+
 		bboxFromRenderer = json.readValue("bboxFromRenderer", boolean.class, bboxFromRenderer, jsonData);
 
 		if (bboxFromRenderer)

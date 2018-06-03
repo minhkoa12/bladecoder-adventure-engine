@@ -16,8 +16,6 @@
 package com.bladecoder.engine.anim;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.model.SceneCamera;
 import com.bladecoder.engine.util.InterpolationMode;
@@ -27,11 +25,8 @@ import com.bladecoder.engine.util.InterpolationMode;
  */
 public class CameraTween extends Tween<SceneCamera> {
 
-	private float startX, startY, startZoom;
-	private float targetX, targetY, targetZoom;
-
-	public CameraTween() {
-	}
+	public float startX, startY, startZoom;
+	public float targetX, targetY, targetZoom;
 
 	public void start(SceneCamera camera, Tween.Type repeatType, int count, float targetX, float targetY,
 			float targetZoom, float duration, InterpolationMode interpolation, ActionCallback cb) {
@@ -61,29 +56,5 @@ public class CameraTween extends Tween<SceneCamera> {
 	public void updateTarget() {
 		target.setZoom(startZoom + getPercent() * (targetZoom - startZoom));
 		target.setPosition(startX + getPercent() * (targetX - startX), startY + getPercent() * (targetY - startY));
-	}
-
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		json.writeValue("startX", startX);
-		json.writeValue("startY", startY);
-		json.writeValue("startZoom", startZoom);
-		json.writeValue("targetX", targetX);
-		json.writeValue("targetY", targetY);
-		json.writeValue("targetZoom", targetZoom);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-
-		startX = json.readValue("startX", Float.class, jsonData);
-		startY = json.readValue("startY", Float.class, jsonData);
-		startZoom = json.readValue("startZoom", Float.class, jsonData);
-		targetX = json.readValue("targetX", Float.class, jsonData);
-		targetY = json.readValue("targetY", Float.class, jsonData);
-		targetZoom = json.readValue("targetZoom", Float.class, jsonData);
 	}
 }

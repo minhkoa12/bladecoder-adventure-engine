@@ -22,11 +22,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.assets.EngineAssetManager;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.RectangleRenderer;
 
 public class ParticleRenderer implements ActorRenderer {
@@ -35,7 +31,7 @@ public class ParticleRenderer implements ActorRenderer {
 
 	private final ParticleEffect effect = new ParticleEffect();
 
-	private float lastAnimationTime = 0;
+	public float lastAnimationTime = 0;
 
 	private Polygon bbox;
 	
@@ -192,28 +188,5 @@ public class ParticleRenderer implements ActorRenderer {
 	@Override
 	public void dispose() {
 		EngineAssetManager.getInstance().disposeAtlas(getAtlasName());
-	}
-
-	@Override
-	public void write(Json json) {
-		
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			json.writeValue("atlasName", getAtlasName());
-			json.writeValue("particleName", getParticleName());
-			json.writeValue("orgAlign", orgAlign);
-		} else {		
-			json.writeValue("lastAnimationTime", lastAnimationTime);
-		}
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {	
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			setAtlasName(json.readValue("atlasName", String.class, jsonData));
-			setParticleName(json.readValue("particleName", String.class, jsonData));
-			orgAlign = json.readValue("orgAlign", int.class, Align.bottom, jsonData);
-		} else {		
-			lastAnimationTime = json.readValue("lastAnimationTime", Float.class, jsonData);
-		}
 	}
 }

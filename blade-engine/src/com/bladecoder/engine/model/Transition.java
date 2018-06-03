@@ -19,11 +19,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.bladecoder.engine.util.RectangleRenderer;
 
 /**
@@ -31,7 +27,7 @@ import com.bladecoder.engine.util.RectangleRenderer;
  * 
  * @author rgarcia
  */
-public class Transition implements Serializable {
+public class Transition {
 	public static enum Type {
 		NONE, FADE_IN, FADE_OUT
 	};
@@ -54,7 +50,7 @@ public class Transition implements Serializable {
 
 			// reset the transition when finish. Only in 'fade in' case, 'fade out'
 			// must stay in screen even when finished
-			if (type == Type.FADE_IN)
+			if (getType() == Type.FADE_IN)
 				reset();
 		} else {
 			currentTime += delta;
@@ -62,15 +58,15 @@ public class Transition implements Serializable {
 	}
 
 	public void reset() {
-		type = Type.NONE;
+		setType(Type.NONE);
 	}
 
 	public void draw(SpriteBatch batch, float width, float height) {
 
-		if (type == Type.NONE)
+		if (getType() == Type.NONE)
 			return;
 
-		switch (type) {
+		switch (getType()) {
 		case FADE_IN:
 			c.a = MathUtils.clamp(Interpolation.fade.apply(1 - currentTime / time), 0, 1);
 			break;
@@ -87,32 +83,53 @@ public class Transition implements Serializable {
 	public void create(float time, Color color, Type type, ActionCallback cb) {
 		this.currentTime = 0f;
 		this.c = color.cpy();
-		this.type = type;
+		this.setType(type);
 		this.time = time;
 		this.cb = cb;
 	}
 
 	public boolean isFinish() {
-		return (currentTime > time || type == Type.NONE);
+		return (currentTime > time || getType() == Type.NONE);
 	}
 
-	@Override
-	public void write(Json json) {
-		json.writeValue("currentTime", currentTime);
-		json.writeValue("time", time);
-		json.writeValue("color", c);
-		json.writeValue("type", type);
-		json.writeValue("cb", ActionCallbackSerialization.find(cb), cb == null ? null : String.class);
+	public float getTime() {
+		return time;
 	}
 
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		currentTime = json.readValue("currentTime", Float.class, jsonData);
-		time = json.readValue("time", Float.class, jsonData);
-		c = json.readValue("color", Color.class, jsonData);
-		type = json.readValue("type", Type.class, jsonData);
-		String cbSer = json.readValue("cb", String.class, jsonData);
-		if (cbSer != null)
-			cb = ActionCallbackSerialization.find(cbSer);
+	public void setTime(float time) {
+		this.time = time;
 	}
+
+	public float getCurrentTime() {
+		return currentTime;
+	}
+
+	public void setCurrentTime(float currentTime) {
+		this.currentTime = currentTime;
+	}
+
+	public ActionCallback getCb() {
+		return cb;
+	}
+
+	public void setCb(ActionCallback cb) {
+		this.cb = cb;
+	}
+
+	public Color getColor() {
+		return c;
+	}
+
+	public void setColor(Color c) {
+		this.c = c;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
 }

@@ -24,12 +24,8 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader.FreeTypeFontLoa
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.i18n.I18N;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.RectangleRenderer;
 
 public class TextRenderer implements ActorRenderer {
@@ -332,44 +328,5 @@ public class TextRenderer implements ActorRenderer {
 			EngineAssetManager.getInstance().unload(fontName + getFontSize() + ".ttf");
 		
 		font = null;
-	}
-
-	@Override
-	public void write(Json json) {
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			json.writeValue("text", text);
-			json.writeValue("fontName", fontName);
-			json.writeValue("fontSize", fontSize);
-			json.writeValue("borderWidth", borderWidth);
-			json.writeValue("borderColor", borderColor);
-			json.writeValue("borderStraight", borderStraight);
-			json.writeValue("shadowOffsetX", shadowOffsetX);
-			json.writeValue("shadowOffsetY", shadowOffsetY);
-			json.writeValue("shadowColor", shadowColor);
-			json.writeValue("align", textAlign);
-			json.writeValue("orgAlign", orgAlign);
-		} else {
-
-		}
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			text = json.readValue("text", String.class, jsonData);
-			fontName = json.readValue("fontName", String.class, jsonData);
-			fontSize = json.readValue("fontSize", int.class, jsonData);
-			borderWidth = json.readValue("borderWidth", int.class, jsonData);
-			borderColor = json.readValue("borderColor", Color.class, jsonData);
-			borderStraight = json.readValue("borderStraight", boolean.class, jsonData);
-			shadowOffsetX = json.readValue("shadowOffsetX", int.class, jsonData);
-			shadowOffsetY = json.readValue("shadowOffsetY", int.class, jsonData);
-			shadowColor = json.readValue("shadowColor", Color.class, jsonData);
-			textAlign = json.readValue("align", int.class, Align.left, jsonData);
-			orgAlign = json.readValue("orgAlign", int.class, Align.bottom, jsonData);
-		} else {
-
-		}
 	}
 }

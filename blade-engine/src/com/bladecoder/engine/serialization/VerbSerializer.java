@@ -1,19 +1,18 @@
 package com.bladecoder.engine.serialization;
 
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.Json.Serializable;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.SerializationException;
-import com.badlogic.gdx.utils.Json.Serializable;
 import com.bladecoder.engine.actions.Action;
 import com.bladecoder.engine.model.Verb;
 import com.bladecoder.engine.model.World;
 import com.bladecoder.engine.serialization.SerializationHelper.Mode;
-import com.bladecoder.engine.util.ActionUtils;
 import com.bladecoder.engine.util.EngineLogger;
 
 public class VerbSerializer {
 
-	static public void write(Verb v, Json json) {
+	static public void write(World w, Verb v, Json json) {
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
 			json.writeValue("id", v.getId());
@@ -29,12 +28,12 @@ public class VerbSerializer {
 
 			json.writeArrayStart("actions");
 			for (Action a : v.getActions()) {
-				ActionUtils.writeJson(a, json);
+				ActionSerializer.write(a, json);
 			}
 			json.writeArrayEnd();
 		} else {
 			json.writeValue("ip", v.getIP());
-			json.writeValue("cb", ActionCallbackSerialization.find(v.getCb()));
+			json.writeValue("cb", ActionCallbackSerialization.find(w, v.getCb()));
 
 			if (v.getCurrentTarget() != null)
 				json.writeValue("currentTarget", v.getCurrentTarget());
@@ -66,7 +65,7 @@ public class VerbSerializer {
 				String clazz = aValue.getString("class");
 
 				try {
-					Action a = ActionUtils.readJson(w, json, aValue);
+					Action a = ActionSerializer.read(w, json, aValue);
 					v.getActions().add(a);
 				} catch (SerializationException e) {
 					EngineLogger.error("Error loading action: " + clazz + " " + aValue.toString());
@@ -78,7 +77,7 @@ public class VerbSerializer {
 			v.setCurrentTarget(json.readValue("currentTarget", String.class, (String) null, jsonData));
 			v.setIP( json.readValue("ip", Integer.class, jsonData));
 			String sCb = json.readValue("cb", String.class, jsonData);
-			v.setCb(ActionCallbackSerialization.find(sCb));
+			v.setCb(ActionCallbackSerialization.find(w, sCb));
 
 			JsonValue actionsValue = jsonData.get("actions");
 

@@ -21,17 +21,13 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.CameraTween;
 import com.bladecoder.engine.anim.Tween;
-import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.util.InterpolationMode;
 
-public class SceneCamera extends OrthographicCamera implements Serializable  {
+public class SceneCamera extends OrthographicCamera  {
 	
 	private static final float START_SCROLLX = 0.1f;
 	private static final float START_SCROLLY = 0.15f;
@@ -44,7 +40,7 @@ public class SceneCamera extends OrthographicCamera implements Serializable  {
 
 	private float scrollingWidth, scrollingHeight;
 	
-	private CameraTween cameraTween;
+	public CameraTween cameraTween;
 	
 	private Matrix4 parallaxView = new Matrix4();
 	private Matrix4 parallaxCombined = new Matrix4();
@@ -193,47 +189,4 @@ public class SceneCamera extends OrthographicCamera implements Serializable  {
 		Matrix4.mul(parallaxCombined.val, parallaxView.val);
 		return parallaxCombined;
 	}
-	
-	@Override
-	public void write(Json json) {
-		float worldScale = EngineAssetManager.getInstance().getScale();
-		
-		json.writeValue("width", viewportWidth / worldScale);
-		json.writeValue("height", viewportHeight / worldScale);
-		json.writeValue("scrollingWidth", scrollingWidth / worldScale);
-		json.writeValue("scrollingHeight", scrollingHeight / worldScale);
-		
-		Vector2 p = getPosition();
-		p.x = p.x/worldScale;
-		p.y = p.y/worldScale;
-		json.writeValue("pos", p);
-		json.writeValue("zoom", getZoom());
-		
-		if(cameraTween != null)
-			json.writeValue("cameraTween", cameraTween);
-	}
-
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		float worldScale = EngineAssetManager.getInstance().getScale();
-		
-		viewportWidth = json.readValue("width", Float.class, jsonData) * worldScale;
-		viewportHeight = json.readValue("height", Float.class, jsonData) * worldScale;
-		scrollingWidth = json.readValue("scrollingWidth", Float.class, jsonData) * worldScale;
-		scrollingHeight = json.readValue("scrollingHeight", Float.class, jsonData) * worldScale;
-		Vector2 pos = json.readValue("pos", Vector2.class, jsonData);
-		pos.x *=  worldScale;
-		pos.y *=  worldScale;
-		float z = json.readValue("zoom", Float.class, jsonData);
-		
-		create(viewportWidth, viewportHeight);
-		this.zoom = z;
-		position.set(pos.x, pos.y, 0);
-		update();
-
-		cameraTween = json.readValue("cameraTween", CameraTween.class, jsonData);
-		if(cameraTween != null) {
-			cameraTween.setTarget(this);
-		}
-	}	
 }

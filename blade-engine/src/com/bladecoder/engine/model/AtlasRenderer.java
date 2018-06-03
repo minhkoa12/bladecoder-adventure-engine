@@ -16,7 +16,6 @@
 package com.bladecoder.engine.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -24,25 +23,21 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
 import com.bladecoder.engine.anim.AtlasAnimationDesc;
 import com.bladecoder.engine.anim.FATween;
 import com.bladecoder.engine.anim.Tween;
 import com.bladecoder.engine.assets.EngineAssetManager;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.engine.util.RectangleRenderer;
 
 public class AtlasRenderer extends AnimationRenderer {
 
 	private AtlasRegion tex;
-	private FATween faTween;
-
-	private int currentFrameIndex;
+	
+	public FATween faTween;
+	public int currentFrameIndex;
 
 	public AtlasRenderer() {
 
@@ -323,36 +318,5 @@ public class AtlasRenderer extends AnimationRenderer {
 		}
 
 		sourceCache.clear();
-	}
-
-	@Override
-	public void write(Json json) {
-		super.write(json);
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
-		} else {
-			json.writeValue("currentFrameIndex", currentFrameIndex);
-
-			if(faTween != null)
-				json.writeValue("faTween", faTween);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
-
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-			fanims = json.readValue("fanims", HashMap.class, AtlasAnimationDesc.class, jsonData);
-		} else {
-
-			currentFrameIndex = json.readValue("currentFrameIndex", Integer.class, jsonData);
-			faTween = json.readValue("faTween", FATween.class, jsonData);
-
-			if (faTween != null)
-				faTween.setTarget(this);
-		}
 	}
 }

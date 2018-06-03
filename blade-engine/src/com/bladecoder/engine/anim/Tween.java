@@ -15,14 +15,10 @@
  ******************************************************************************/
 package com.bladecoder.engine.anim;
 
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.bladecoder.engine.util.InterpolationMode;
 
-abstract public class Tween<T> implements Serializable {
+abstract public class Tween<T> {
 	public enum Type {
 		NO_REPEAT, REPEAT, YOYO, REVERSE, REVERSE_REPEAT, SPRITE_DEFINED;
 	}
@@ -39,15 +35,12 @@ abstract public class Tween<T> implements Serializable {
 	
 	protected T target;
 
-	public Tween() {
-	}
-
 	public void update(float delta) {
 		if (complete)
 			return;
 
-		if (!began) {
-			began = true;
+		if (!isBegan()) {
+			setBegan(true);
 		}
 
 		time += delta;
@@ -119,7 +112,7 @@ abstract public class Tween<T> implements Serializable {
 
 	public void restart() {
 		time = 0;
-		began = false;
+		setBegan(false);
 		complete = false;
 	}
 
@@ -187,34 +180,23 @@ abstract public class Tween<T> implements Serializable {
 		this.count = count;
 	}
 
-	@Override
-	public void write(Json json) {
-		json.writeValue("duration", duration);
-		json.writeValue("time", time);
-		json.writeValue("reverse", reverse);
-		json.writeValue("began", began);
-		json.writeValue("complete", complete);
-		json.writeValue("type", type);
-		json.writeValue("count", count);
-
-		json.writeValue("interpolation", interpolation);
-		json.writeValue("cb", ActionCallbackSerialization.find(cb), cb == null ? null : String.class);
+	public boolean isBegan() {
+		return began;
 	}
 
-	@Override
-	public void read(Json json, JsonValue jsonData) {
-		duration = json.readValue("duration", Float.class, jsonData);
-		time = json.readValue("time", Float.class, jsonData);
-		
-		reverse = json.readValue("reverse", Boolean.class, jsonData);
-		began = json.readValue("began", Boolean.class, jsonData);
-		complete = json.readValue("complete", Boolean.class, jsonData);
-		type = json.readValue("type", Type.class, jsonData);
-		count = json.readValue("count", Integer.class, jsonData);
+	public void setBegan(boolean began) {
+		this.began = began;
+	}
 
-		interpolation = json.readValue("interpolation", InterpolationMode.class, jsonData);
+	public void setComplete(boolean complete) {
+		this.complete = complete;
+	}
 
-		String cbSer = json.readValue("cb", String.class, jsonData);
-		cb = ActionCallbackSerialization.find(cbSer);
+	public InterpolationMode getInterpolation() {
+		return interpolation;
+	}
+
+	public ActionCallback getCb() {
+		return cb;
 	}
 }

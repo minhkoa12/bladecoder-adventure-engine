@@ -38,7 +38,7 @@ import com.bladecoder.engine.util.EngineLogger;
  * @author rgarcia
  */
 public class TesterBot {
-	/** time between actions in secons */
+	/** time between actions in seconds */
 	private float maxWaitInverval = 1f;
 	private float waitInverval = 0f;
 	private float deltaTime = 0f;
@@ -58,30 +58,30 @@ public class TesterBot {
 	private final ArrayList<String> excludeList = new ArrayList<String>();
 	
 	private final boolean inventoryAction;
-
-	public TesterBot() {
+	private World world;
+	
+	public TesterBot(UI ui) {
 		inventoryAction = !Config.getProperty(Config.SINGLE_ACTION_INVENTORY, false);
+		world = ui.getWorld();
 	}
 
 	public void update(float d) {
 		
 		if(!enabled)
 			return;
-		
-		World w = World.getInstance();
 
 		deltaTime += d;
 		inSceneTimeDelta += d;
 
-		if(w.inCutMode() && isPassTexts())
-			w.getCurrentScene().getTextManager().next();
+		if(world.inCutMode() && isPassTexts())
+			world.getCurrentScene().getTextManager().next();
 		
-		if (deltaTime > waitInverval && !w.inCutMode()) {
+		if (deltaTime > waitInverval && !world.inCutMode()) {
 			deltaTime = 0;
 			waitInverval = MathUtils.random(maxWaitInverval);
 			
 			boolean isWalking = false;
-			SpriteActor player = w.getCurrentScene().getPlayer();
+			SpriteActor player = world.getCurrentScene().getPlayer();
 			if(player != null) {
 				if(((AnimationRenderer)player.getRenderer()).getCurrentAnimationId().startsWith(CharacterActor.DEFAULT_WALK_ANIM))
 					isWalking = true;
@@ -90,9 +90,9 @@ public class TesterBot {
 			if(isWaitWhenWalking() && isWalking)
 				return;
 			
-			Scene s = w.getCurrentScene();
+			Scene s = world.getCurrentScene();
 
-			if (w.getCurrentDialog() == null) {
+			if (world.getCurrentDialog() == null) {
 
 				// Select actor or goto
 				boolean chooseActor = MathUtils.randomBoolean(.75f);
@@ -136,10 +136,10 @@ public class TesterBot {
 							if(verb.equals(Verb.LEAVE_VERB))
 								inSceneTimeDelta = 0;
 						}
-					} else if (w.getInventory().getNumItems() > 0 && w.getInventory().isVisible()) {
+					} else if (world.getInventory().getNumItems() > 0 && world.getInventory().isVisible()) {
 						// INVENTORY ACTOR
-						int pos = MathUtils.random(w.getInventory().getNumItems() - 1);
-						SpriteActor invActor = w.getInventory().get(pos);
+						int pos = MathUtils.random(world.getInventory().getNumItems() - 1);
+						SpriteActor invActor = world.getInventory().get(pos);
 						
 						if(excludeList.contains(invActor.getId()))
 							return;
@@ -157,14 +157,14 @@ public class TesterBot {
 
 							InteractiveActor targetActor = null;
 
-							if (w.getInventory().getNumItems() > 1 && MathUtils.randomBoolean(0.33f)) {
+							if (world.getInventory().getNumItems() > 1 && MathUtils.randomBoolean(0.33f)) {
 								// CHOOSE TARGET FROM INVENTORY
-								int pos2 = MathUtils.random(w.getInventory().getNumItems() - 1);
+								int pos2 = MathUtils.random(world.getInventory().getNumItems() - 1);
 
 								if (pos2 == pos)
-									pos2 = (pos2 + 1) % w.getInventory().getNumItems();
+									pos2 = (pos2 + 1) % world.getInventory().getNumItems();
 
-								targetActor = w.getInventory().get(pos2);
+								targetActor = world.getInventory().get(pos2);
 								
 								if(excludeList.contains(targetActor.getId()))
 									return;
@@ -196,8 +196,8 @@ public class TesterBot {
 					}
 
 				} else if (s.getPlayer() != null) {
-					gotoVector.x = MathUtils.random() * w.getCurrentScene().getCamera().getScrollingWidth();
-					gotoVector.y = MathUtils.random() * w.getCurrentScene().getCamera().getScrollingHeight();
+					gotoVector.x = MathUtils.random() * world.getCurrentScene().getCamera().getScrollingWidth();
+					gotoVector.y = MathUtils.random() * world.getCurrentScene().getCamera().getScrollingHeight();
 
 					if (s.getPlayer().getVerb(Verb.GOTO_VERB) != null) {
 						EngineLogger.debug("<TESTERBOT> GOTO: GOTO VERB");
@@ -209,12 +209,12 @@ public class TesterBot {
 				}
 			} else {
 				// DIALOG MODE
-				List<String> visibleOptions = w.getDialogOptions();
+				List<String> visibleOptions = world.getDialogOptions();
 						
 				if(visibleOptions.size() > 0) {
 					int pos = MathUtils.random(visibleOptions.size() - 1);
 					EngineLogger.debug("<TESTERBOT> SELECT OPTION: " + pos);
-					w.selectDialogOption(pos);
+					world.selectDialogOption(pos);
 				}
 			}
 		} 

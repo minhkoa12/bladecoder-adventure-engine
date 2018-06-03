@@ -36,18 +36,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.bladecoder.engine.assets.AssetConsumer;
 import com.bladecoder.engine.assets.EngineAssetManager;
-import com.bladecoder.engine.i18n.I18N;
 import com.bladecoder.engine.ink.InkManager;
 import com.bladecoder.engine.serialization.JsonSerializer;
-import com.bladecoder.engine.serialization.SerializationHelper;
-import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.engine.util.FileUtils;
 
@@ -102,7 +96,7 @@ public class World implements AssetConsumer {
 	private Transition transition;
 
 	private MusicManager musicManager;
-	
+
 	private WorldListener listener;
 
 	// ------------ LAZY CREATED OBJECTS ------------
@@ -111,7 +105,6 @@ public class World implements AssetConsumer {
 
 	// ------------ TRANSIENT OBJECTS ------------
 	private AssetState assetState;
-	private boolean disposed = true;
 	transient private SpriteBatch spriteBatch;
 
 	// for debug purposes, keep track of loading time
@@ -127,25 +120,25 @@ public class World implements AssetConsumer {
 
 	// If true call 'initNewGame' or 'initSavedGame' verbs.
 	private boolean initGame;
-	
+
 	final JsonSerializer serializer = new JsonSerializer(this);
 
 	public static World getInstance() {
 		return instance;
 	}
 
-	private World() {
+	public World() {
 	}
 
 	private void init() {
-		
+
 		inventories.clear();
 		inventories.put(DEFAULT_INVENTORY, new Inventory());
 		setCurrentInventory(DEFAULT_INVENTORY);
-		
+
 		scenes.clear();
 		sounds.clear();
-		
+
 		uiActors = new UIActors(this);
 
 		cutMode = false;
@@ -160,21 +153,19 @@ public class World implements AssetConsumer {
 
 		musicManager = new MusicManager();
 
-		paused = false;
-
-		disposed = false;
+		paused = true;
 
 		initGame = true;
 	}
-	
+
 	public void setListener(WorldListener l) {
 		listener = l;
 	}
-	
+
 	public WorldListener getListener() {
 		return listener;
 	}
-	
+
 	public JsonSerializer getSerializer() {
 		return serializer;
 	}
@@ -197,8 +188,8 @@ public class World implements AssetConsumer {
 	/**
 	 * Returns a scene from the cache. null if the scene is not cached.
 	 * 
-	 * Note that by now, the cache has only one Scene. In the future, the cache
-	 * will be a Hastable.
+	 * Note that by now, the cache has only one Scene. In the future, the cache will
+	 * be a Hastable.
 	 */
 	public Scene getCachedScene(String id) {
 
@@ -352,7 +343,7 @@ public class World implements AssetConsumer {
 	public long getTimeOfGame() {
 		return timeOfGame;
 	}
-	
+
 	public void setTimeOfGame(long t) {
 		timeOfGame = t;
 	}
@@ -368,7 +359,7 @@ public class World implements AssetConsumer {
 	public Scene getCurrentScene() {
 		return currentScene;
 	}
-	
+
 	public void setCurrentScene(Scene s) {
 		currentScene = s;
 	}
@@ -381,6 +372,10 @@ public class World implements AssetConsumer {
 		return currentChapter;
 	}
 
+	public void setCurrentChapter(String currentChapter) {
+		this.currentChapter = currentChapter;
+	}
+
 	public void setInitScene(String initScene) {
 		this.initScene = initScene;
 	}
@@ -390,7 +385,7 @@ public class World implements AssetConsumer {
 		initLoadingTime = System.currentTimeMillis();
 
 		if (cachedScene == scene) {
-			if(init)
+			if (init)
 				assetState = AssetState.LOADING_AND_INIT_SCENE;
 			else
 				assetState = AssetState.LOADING;
@@ -400,7 +395,7 @@ public class World implements AssetConsumer {
 				cachedScene = null;
 			}
 
-			if(init)
+			if (init)
 				assetState = AssetState.LOAD_ASSETS_AND_INIT_SCENE;
 			else
 				assetState = AssetState.LOAD_ASSETS;
@@ -430,11 +425,11 @@ public class World implements AssetConsumer {
 	public Inventory getInventory() {
 		return inventories.get(currentInventory);
 	}
-	
+
 	public HashMap<String, String> getCustomProperties() {
 		return customProperties;
 	}
-	
+
 	public Map<String, Inventory> getInventories() {
 		return inventories;
 	}
@@ -457,15 +452,15 @@ public class World implements AssetConsumer {
 
 	public void setCutMode(boolean v) {
 		cutMode = v;
-		
-		if(listener != null)
+
+		if (listener != null)
 			listener.cutMode(cutMode);
 	}
 
 	public void enterScene(String id, boolean init) {
-		if(id.equals("$" + WorldProperties.PREVIOUS_SCENE.toString()))
+		if (id.equals("$" + WorldProperties.PREVIOUS_SCENE.toString()))
 			id = getCustomProperty(WorldProperties.PREVIOUS_SCENE.toString());
-		
+
 		Scene s = scenes.get(id);
 
 		if (s != null) {
@@ -485,7 +480,7 @@ public class World implements AssetConsumer {
 			if (visibleOptions == 0)
 				currentDialog = null;
 		}
-		
+
 		getListener().dialogOptions();
 	}
 
@@ -527,8 +522,8 @@ public class World implements AssetConsumer {
 	private final Vector3 unprojectTmp = new Vector3();
 
 	/**
-	 * Obtains the actor at (x,y) with TOLERANCE. Search the current scene and
-	 * the UIActors list.
+	 * Obtains the actor at (x,y) with TOLERANCE. Search the current scene and the
+	 * UIActors list.
 	 */
 	public InteractiveActor getInteractiveActorAtInput(Viewport v, float tolerance) {
 
@@ -572,13 +567,13 @@ public class World implements AssetConsumer {
 	}
 
 	public boolean isDisposed() {
-		return disposed;
+		return currentScene == null;
 	}
 
 	@Override
 	public void dispose() {
 
-		if (disposed)
+		if (isDisposed())
 			return;
 
 		try {
@@ -617,9 +612,8 @@ public class World implements AssetConsumer {
 		} catch (Exception e) {
 			EngineLogger.error(e.getMessage());
 		}
-
-		paused = true;
-		disposed = true;
+		
+		init();
 	}
 
 	public SceneCamera getSceneCamera() {
@@ -672,7 +666,7 @@ public class World implements AssetConsumer {
 			// Pause all sounds
 			currentScene.getSoundManager().pause();
 		}
-		
+
 		listener.pause(true);
 	}
 
@@ -688,13 +682,13 @@ public class World implements AssetConsumer {
 				currentScene.getSoundManager().resume();
 			}
 		}
-		
+
 		listener.pause(false);
 	}
 
 	public void newGame() throws Exception {
 		timeOfGame = 0;
-		loadChapter(null);
+		serializer.loadChapter(null);
 	}
 
 	public void endGame() {
@@ -707,7 +701,7 @@ public class World implements AssetConsumer {
 	}
 
 	// ********** SERIALIZATION **********
-	
+
 	public void saveGameState() throws IOException {
 		serializer.saveGameState(GAMESTATE_FILENAME);
 	}
@@ -718,8 +712,7 @@ public class World implements AssetConsumer {
 	}
 
 	/**
-	 * Try to load the save game if exists. In other case, load the game from
-	 * XML.
+	 * Try to load the save game if exists. In other case, load the game from XML.
 	 * 
 	 * @throws Exception
 	 * 
@@ -728,58 +721,19 @@ public class World implements AssetConsumer {
 	 * @throws ParserConfigurationException
 	 */
 	public void load() throws Exception {
+		// LOAD SAVEGAME IF EXISTS
 		if (EngineAssetManager.getInstance().getUserFile(GAMESTATE_FILENAME).exists()) {
-			// SAVEGAME EXISTS
 			try {
-				instance.loadGameState();
+				loadGameState();
+				return;
+
 			} catch (Exception e) {
-				EngineLogger.error("ERROR LOADING SAVED GAME", e);
-				instance.loadChapter(null);
+				EngineLogger.error("ERROR LOADING SAVED GAME. TRYING TO CREATE A NEW GAME.", e);
 			}
-		} else {
-			// XML LOADING
-			instance.loadChapter(null);
-		}
-	}
-
-	public void loadChapter(String chapterName) throws IOException {
-		if (!disposed)
-			dispose();
-
-		init();
-
-		long initTime = System.currentTimeMillis();
-
-		SerializationHelper.getInstance().setMode(Mode.MODEL);
-
-		if (chapterName == null)
-			chapterName = initChapter;
-
-		currentChapter = chapterName;
-
-		if (EngineAssetManager.getInstance().getModelFile(chapterName + EngineAssetManager.CHAPTER_EXT).exists()) {
-
-			JsonValue root = new JsonReader().parse(EngineAssetManager.getInstance()
-					.getModelFile(chapterName + EngineAssetManager.CHAPTER_EXT).reader("UTF-8"));
-
-			Json json = new Json();
-			json.setIgnoreUnknownFields(true);
-
-			serializer.read(json, root);
-
-			I18N.loadChapter(EngineAssetManager.MODEL_DIR + chapterName);
-
-			customProperties.put(WorldProperties.CURRENT_CHAPTER.toString(), chapterName);
-			customProperties.put(WorldProperties.PLATFORM.toString(), Gdx.app.getType().toString());
-		} else {
-			EngineLogger.error(
-					"ERROR LOADING CHAPTER: " + chapterName + EngineAssetManager.CHAPTER_EXT + " doesn't exists.");
-			dispose();
-			throw new IOException(
-					"ERROR LOADING CHAPTER: " + chapterName + EngineAssetManager.CHAPTER_EXT + " doesn't exists.");
 		}
 
-		EngineLogger.debug("MODEL LOADING TIME (ms): " + (System.currentTimeMillis() - initTime));
+		// MODEL LOADING
+		getSerializer().loadChapter(null);
 	}
 
 	private ObjectWrapper getObjectWrapper() {
@@ -801,7 +755,7 @@ public class World implements AssetConsumer {
 		if (test)
 			this.testScene = scene;
 
-		loadChapter(chapter);
+		serializer.loadChapter(chapter);
 
 		if (scene != null) {
 			currentScene = null;
@@ -812,7 +766,7 @@ public class World implements AssetConsumer {
 	public void setTestScene(String s) {
 		testScene = s;
 	}
-	
+
 	/**
 	 * Load the world description in 'world.json'.
 	 * 
@@ -848,9 +802,9 @@ public class World implements AssetConsumer {
 			savedFile = EngineAssetManager.getInstance().getUserFile(filename);
 		else
 			savedFile = EngineAssetManager.getInstance().getAsset("tests/" + filename);
-		
+
 		serializer.loadGameState(savedFile);
-		
+
 		assetState = AssetState.LOAD_ASSETS;
 	}
 

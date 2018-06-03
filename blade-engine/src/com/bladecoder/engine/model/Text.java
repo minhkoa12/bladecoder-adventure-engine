@@ -16,13 +16,9 @@
 package com.bladecoder.engine.model;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
-import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
-import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 
-public class Text implements Serializable {
+public class Text {
 	private static final float DEFAULT_TIME = 1f;
 	
 	public enum Type {
@@ -36,7 +32,7 @@ public class Text implements Serializable {
 	public Type type;
 	public Color color;
 	public String style;
-	private ActionCallback cb;
+	public ActionCallback cb;
 	public String actorId;
 	public String voiceId;
 
@@ -76,36 +72,4 @@ public class Text implements Serializable {
 			tmpcb.resume();
 		}
 	}
-	
-	@Override
-	public void write(Json json) {	
-		
-		json.writeValue("str", str);
-		json.writeValue("x", x);
-		json.writeValue("y", y);
-		json.writeValue("time",time);
-		json.writeValue("type", type);
-		json.writeValue("color", color);
-		json.writeValue("style", style);
-		json.writeValue("actorId", actorId);
-		json.writeValue("voiceId", voiceId);
-		json.writeValue("cb", ActionCallbackSerialization.find(cb), cb == null ? null
-				: String.class);
-	}
-
-	@Override
-	public void read (Json json, JsonValue jsonData) {
-		str = json.readValue("str", String.class, jsonData);
-		x = json.readValue("x", Float.class, jsonData);
-		y = json.readValue("y", Float.class, jsonData);
-		time = json.readValue("time", Float.class, jsonData);
-		type = json.readValue("type", Type.class, jsonData);
-		color = json.readValue("color", Color.class, jsonData);
-		style = json.readValue("style", String.class, jsonData);
-		actorId = json.readValue("actorId", String.class, jsonData);
-		voiceId = json.readValue("voiceId", String.class, jsonData);
-		String cbSer = json.readValue("cb", String.class, jsonData);
-		if(cbSer != null)
-			cb = ActionCallbackSerialization.find(cbSer);
-	}	
 }

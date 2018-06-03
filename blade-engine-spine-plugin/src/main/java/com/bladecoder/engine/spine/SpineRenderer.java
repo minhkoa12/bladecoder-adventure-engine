@@ -26,6 +26,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.Json.Serializable;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.ActionCallback;
 import com.bladecoder.engine.anim.AnimationDesc;
@@ -55,7 +56,7 @@ import com.esotericsoftware.spine.SkeletonData;
 import com.esotericsoftware.spine.SkeletonRenderer;
 import com.esotericsoftware.spine.Skin;
 
-public class SpineRenderer extends AnimationRenderer {
+public class SpineRenderer extends AnimationRenderer implements Serializable {
 
 	private final static int PLAY_ANIMATION_EVENT = 0;
 	private final static int PLAY_SOUND_EVENT = 1;
@@ -83,6 +84,8 @@ public class SpineRenderer extends AnimationRenderer {
 	private String secondaryAnimation;
 	
 	private String skin;
+	
+	private World w;
 
 	class SkeletonCacheEntry extends CacheEntry {
 		Skeleton skeleton;
@@ -91,11 +94,15 @@ public class SpineRenderer extends AnimationRenderer {
 	}
 
 	public SpineRenderer() {
-
+		w = World.getInstance();
 	}
 
 	public void enableEvents(boolean v) {
 		eventsEnabled = v;
+	}
+	
+	public void setWorld(World w) {
+		this.w = w;
 	}
 
 	private AnimationStateListener animationListener = new AnimationStateAdapter() {
@@ -147,13 +154,13 @@ public class SpineRenderer extends AnimationRenderer {
 				if(World.getInstance().getSounds().get(sid) == null && actor != null)
 					sid = actor.getId() + "_" + sid;
 				
-				World.getInstance().getCurrentScene().getSoundManager().playSound(sid);
+				w.getCurrentScene().getSoundManager().playSound(sid);
 				break;
 			case RUN_VERB_EVENT:
 				if(actor != null)
 					actor.runVerb(event.getString());
 				else
-					World.getInstance().getCurrentScene().runVerb(event.getString());
+					w.getCurrentScene().runVerb(event.getString());
 				break;
 			case LOOP_EVENT:
 				// used for looping from a starting frame
@@ -645,13 +652,12 @@ public class SpineRenderer extends AnimationRenderer {
 
 	@Override
 	public void write(Json json) {
-		super.write(json);
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
 
 		} else {
 
-			json.writeValue("cb", ActionCallbackSerialization.find(animationCb));
+			json.writeValue("cb", ActionCallbackSerialization.find(w, animationCb));
 			json.writeValue("currentCount", currentCount);
 
 			if (currentAnimation != null)
@@ -669,14 +675,13 @@ public class SpineRenderer extends AnimationRenderer {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void read(Json json, JsonValue jsonData) {
-		super.read(json, jsonData);
 
 		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
 			fanims = json.readValue("fanims", HashMap.class, SpineAnimationDesc.class, jsonData);
 		} else {
 
 			String animationCbSer = json.readValue("cb", String.class, jsonData);
-			animationCb = ActionCallbackSerialization.find(animationCbSer);
+			animationCb = ActionCallbackSerialization.find(w, animationCbSer);
 
 			currentCount = json.readValue("currentCount", Integer.class, jsonData);
 
