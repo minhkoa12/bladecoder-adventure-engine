@@ -329,6 +329,7 @@ public class ProjectToolbar extends Table {
 			String msg = "Something went wrong while saving the project.\n\n" + ex.getClass().getSimpleName() + " - "
 					+ ex.getMessage();
 			Message.showMsgDialog(getStage(), "Error saving project", msg);
+			EditorLogger.error("Error saving project", ex);
 		}
 	}
 

@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.JsonWriter.OutputType;
 import com.bladecoder.engine.assets.EngineAssetManager;
 import com.bladecoder.engine.i18n.I18N;
+import com.bladecoder.engine.model.Scene;
 import com.bladecoder.engine.model.World;
 import com.bladecoder.engine.model.World.WorldProperties;
 import com.bladecoder.engine.serialization.SerializationHelper.Mode;
@@ -111,15 +112,13 @@ public class JsonSerializer {
 		json.setOutputType(OutputType.javascript);
 
 		String s = null;
-
+		
 		SerializationHelper.getInstance().setMode(Mode.MODEL);
 
 		json.setWriter(new StringWriter());
-
-		json.writeObjectStart();
-			WorldSerializer.write(w, json);
-		json.writeObjectEnd();
-
+		
+		setSerializers(json, Mode.MODEL);	
+		json.writeValue(w);
 
 		if (EngineLogger.debugMode())
 			s = json.prettyPrint(json.getWriter().getWriter().toString());
@@ -149,8 +148,9 @@ public class JsonSerializer {
 
 			Json json = new Json();
 			json.setIgnoreUnknownFields(true);
-
-			WorldSerializer.read(w, json, root);
+			
+			setSerializers(json, Mode.STATE);			
+			json.readValue(World.class, root);
 
 		} else {
 			throw new IOException("LOADGAMESTATE: no saved game exists");
@@ -172,10 +172,8 @@ public class JsonSerializer {
 		
 		json.setWriter(new StringWriter());
 
-		json.writeObjectStart();
-			WorldSerializer.write(w, json);
-		json.writeObjectEnd();
-
+		setSerializers(json, Mode.STATE);	
+		json.writeValue(w);
 
 		if (EngineLogger.debugMode())
 			s = json.prettyPrint(json.getWriter().getWriter().toString());
@@ -218,7 +216,8 @@ public class JsonSerializer {
 			Json json = new Json();
 			json.setIgnoreUnknownFields(true);
 
-			WorldSerializer.read(w, json, root);
+			setSerializers(json, Mode.MODEL);	
+			json.readValue(World.class, root);
 
 			I18N.loadChapter(EngineAssetManager.MODEL_DIR + chapterName);
 
@@ -233,5 +232,10 @@ public class JsonSerializer {
 		}
 
 		EngineLogger.debug("MODEL LOADING TIME (ms): " + (System.currentTimeMillis() - initTime));
+	}
+	
+	public void setSerializers(Json json, Mode mode) {
+		json.setSerializer(World.class, new WorldSerializer(w, mode));
+		json.setSerializer(Scene.class, new SceneSerializer(w, mode));
 	}
 }

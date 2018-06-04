@@ -1,7 +1,6 @@
 package com.bladecoder.engine.serialization;
 
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.Json.Serializable;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.SerializationException;
 import com.bladecoder.engine.actions.Action;
@@ -25,10 +24,11 @@ public class VerbSerializer {
 
 			if (v.getIcon() != null)
 				json.writeValue("icon", v.getIcon());
-
+			
+			ActionSerializer as = new ActionSerializer(w, Mode.MODEL);
 			json.writeArrayStart("actions");
 			for (Action a : v.getActions()) {
-				ActionSerializer.write(a, json);
+				as.write(json, a, null);
 			}
 			json.writeArrayEnd();
 		} else {
@@ -38,13 +38,10 @@ public class VerbSerializer {
 			if (v.getCurrentTarget() != null)
 				json.writeValue("currentTarget", v.getCurrentTarget());
 
+			ActionSerializer as = new ActionSerializer(w, Mode.STATE);
 			json.writeArrayStart("actions");
 			for (Action a : v.getActions()) {
-				if (a instanceof Serializable) {
-					json.writeObjectStart();
-					((Serializable) a).write(json);
-					json.writeObjectEnd();
-				}
+				as.write(json, a, null);
 			}
 			json.writeArrayEnd();
 		}
@@ -59,13 +56,14 @@ public class VerbSerializer {
 			v.setIcon(json.readValue("icon", String.class, (String) null, jsonData));
 
 			v.getActions().clear();
+			ActionSerializer as = new ActionSerializer(w, Mode.MODEL);
 			JsonValue actionsValue = jsonData.get("actions");
 			for (int i = 0; i < actionsValue.size; i++) {
 				JsonValue aValue = actionsValue.get(i);
 				String clazz = aValue.getString("class");
 
 				try {
-					Action a = ActionSerializer.read(w, json, aValue);
+					Action a = as.read(json, aValue, null);
 					v.getActions().add(a);
 				} catch (SerializationException e) {
 					EngineLogger.error("Error loading action: " + clazz + " " + aValue.toString());
@@ -79,17 +77,19 @@ public class VerbSerializer {
 			String sCb = json.readValue("cb", String.class, jsonData);
 			v.setCb(ActionCallbackSerialization.find(w, sCb));
 
+			ActionSerializer as = new ActionSerializer(w, Mode.STATE);
 			JsonValue actionsValue = jsonData.get("actions");
 
 			int i = 0;
 
 			for (Action a : v.getActions()) {
-				if (a instanceof Serializable && i < actionsValue.size) {
+				if (i < actionsValue.size) {
 					if (actionsValue.get(i) == null)
 						break;
 
-					((Serializable) a).read(json, actionsValue.get(i));
-					i++;
+					as.setCurrent(a);
+					if( as.read(json, actionsValue.get(i), null) != null)
+						i++;
 				}
 			}
 		}

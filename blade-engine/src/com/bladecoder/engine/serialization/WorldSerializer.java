@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.Json.Serializer;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bladecoder.engine.actions.Action;
 import com.bladecoder.engine.actions.PlaySoundAction;
@@ -29,32 +30,35 @@ import com.bladecoder.engine.util.ActionUtils;
 import com.bladecoder.engine.util.Config;
 import com.bladecoder.engine.util.EngineLogger;
 
-public class WorldSerializer {
+@SuppressWarnings("deprecation")
+public class WorldSerializer implements Serializer<World> {
 
-	static public void write(World w, Json json) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
+	final private World w;
+	final private Mode mode;
+
+	public WorldSerializer(World w, Mode mode) {
+		this.w = w;
+		this.mode = mode;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void write(Json json, World w, Class knownType) {
+		json.writeObjectStart();
+		
+		json.writeValue("scenes", w.getScenes());
+		
+		if (mode == Mode.MODEL) {
 			json.writeValue(Config.BLADE_ENGINE_VERSION_PROP,
 					Config.getProperty(Config.BLADE_ENGINE_VERSION_PROP, null));
 
 			json.writeValue("sounds", w.getSounds(), w.getSounds().getClass(), SoundDesc.class);
-
-			// SCENES
-			json.writeObjectStart("scenes");
-			for (Map.Entry<String, Scene> entry : w.getScenes().entrySet()) {
-				json.writeObjectStart(entry.getKey());
-				SceneSerializer.write(w, entry.getValue(), json);
-				json.writeObjectEnd();
-			}
-			json.writeObjectEnd();
-
 			json.writeValue("initScene", w.getInitScene());
 
 		} else {
 			json.writeValue(Config.BLADE_ENGINE_VERSION_PROP,
 					Config.getProperty(Config.BLADE_ENGINE_VERSION_PROP, null));
 			json.writeValue(Config.VERSION_PROP, Config.getProperty(Config.VERSION_PROP, null));
-
-			json.writeValue("scenes", w.getScenes(), w.getScenes().getClass(), Scene.class);
 
 			json.writeValue("currentScene", w.getCurrentScene().getId());
 
@@ -85,9 +89,9 @@ public class WorldSerializer {
 			}
 
 			json.writeValue("chapter", w.getCurrentChapter());
-			
+
 			json.writeObjectStart("music");
-				MusicManagerSerializer.write(w, w.getMusicManager(), json);
+			MusicManagerSerializer.write(w, w.getMusicManager(), json);
 			json.writeObjectEnd();
 
 			if (w.getInkManager() != null)
@@ -96,38 +100,23 @@ public class WorldSerializer {
 			if (!w.getUIActors().getActors().isEmpty())
 				json.writeValue("uiActors", w.getUIActors());
 		}
-
+		json.writeObjectEnd();
 	}
 
-	static public void read(World w, Json json, JsonValue jsonData) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public World read(Json json, JsonValue jsonData, Class type) {
+		if (mode == Mode.MODEL) {
 			String version = json.readValue(Config.BLADE_ENGINE_VERSION_PROP, String.class, jsonData);
 			if (version != null && !version.equals(Config.getProperty(Config.BLADE_ENGINE_VERSION_PROP, ""))) {
 				EngineLogger.debug("Model Engine Version v" + version + " differs from Current Engine Version v"
 						+ Config.getProperty(Config.BLADE_ENGINE_VERSION_PROP, ""));
 			}
 
-			// SOUNDS
-			JsonValue jsonSounds = jsonData.get("sounds");
-			HashMap<String, SoundDesc> sounds = w.getSounds();
 
-			for (int i = 0; i < jsonSounds.size; i++) {
-				JsonValue jsonValue = jsonSounds.get(i);
-				SoundDesc s = json.readValue(SoundDesc.class, jsonValue);
-				sounds.put(jsonValue.name, s);
-			}
-
-			// SCENES
-			JsonValue jsonScenes = jsonData.get("scenes");
-			Map<String, Scene> scenes = w.getScenes();
-
-			for (int i = 0; i < jsonScenes.size; i++) {
-				JsonValue jsonValue = jsonScenes.get(i);
-				Scene s = new Scene(w);
-				scenes.put(jsonValue.name, s);
-				SceneSerializer.read(w, s, json, jsonValue);
-			}
-
+			w.getSounds().putAll(json.readValue("sounds", w.getSounds().getClass(), SoundDesc.class, jsonData));			
+			w.getScenes().putAll(json.readValue("scenes", w.getScenes().getClass(), Scene.class, jsonData));
+			
 			w.setInitScene(json.readValue("initScene", String.class, jsonData));
 
 			if (w.getInitScene() == null && w.getScenes().size() > 0) {
@@ -161,8 +150,8 @@ public class WorldSerializer {
 			try {
 				w.getSerializer().loadChapter(currentChapter);
 			} catch (IOException e1) {
-				EngineLogger.error("Error Loading Chapter");
-				return;
+				EngineLogger.error("Error Loading Chapter: " + currentChapter);
+				return null;
 			}
 
 			// restore the state after loading the model
@@ -193,13 +182,17 @@ public class WorldSerializer {
 				w.getUIActors().read(json, jsonData.get("uiActors"));
 			}
 
+			SceneSerializer ss = (SceneSerializer)json.getSerializer(Scene.class);
+			
 			for (Scene s : w.getScenes().values()) {
 				JsonValue jsonValue = jsonData.get("scenes").get(s.getId());
 
-				if (jsonValue != null)
-					SceneSerializer.read(w, s, json, jsonData);
-				else
+				if (jsonValue != null) {
+					ss.setCurrent(s);
+					json.readValue(Scene.class, jsonValue);
+				} else {
 					EngineLogger.debug("LOAD WARNING: Scene not found in saved game: " + s.getId());
+				}
 			}
 
 			w.setTimeOfGame(json.readValue("timeOfGame", long.class, 0L, jsonData));
@@ -227,14 +220,16 @@ public class WorldSerializer {
 			}
 
 			TransitionSerializer.read(w, w.getTransition(), json, jsonData.get("transition"));
-			
+
 			MusicManagerSerializer.read(w, w.getMusicManager(), json, jsonData.get("musicEngine"));
 
 			I18N.loadChapter(EngineAssetManager.MODEL_DIR + w.getCurrentChapter());
 		}
+
+		return w;
 	}
 
-	static private void cacheSounds(World w) {
+	private void cacheSounds(World w) {
 		for (Scene s : w.getScenes().values()) {
 
 			HashMap<String, Verb> verbs = s.getVerbManager().getVerbs();

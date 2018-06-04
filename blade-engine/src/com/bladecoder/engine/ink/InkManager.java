@@ -25,6 +25,7 @@ import com.bladecoder.engine.model.VerbRunner;
 import com.bladecoder.engine.model.World;
 import com.bladecoder.engine.serialization.ActionCallbackSerialization;
 import com.bladecoder.engine.serialization.ActionSerializer;
+import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 import com.bladecoder.ink.runtime.Choice;
 import com.bladecoder.ink.runtime.InkList;
@@ -502,21 +503,19 @@ public class InkManager implements VerbRunner, Serializable {
 		json.writeValue("cb", ActionCallbackSerialization.find(w, cb));
 
 		// SAVE ACTIONS
+		ActionSerializer as = new ActionSerializer(w, Mode.MODEL);
 		json.writeArrayStart("actions");
 		for (Action a : actions) {
-			ActionSerializer.write(a, json);
+			as.write(json, a, null);
 		}
 		json.writeArrayEnd();
 
 		json.writeValue("ip", ip);
-
+		
+		as = new ActionSerializer(w, Mode.STATE);
 		json.writeArrayStart("actionsSer");
 		for (Action a : actions) {
-			if (a instanceof Serializable) {
-				json.writeObjectStart();
-				((Serializable) a).write(json);
-				json.writeObjectEnd();
-			}
+			as.write(json, a, null);
 		}
 		json.writeArrayEnd();
 
@@ -539,11 +538,12 @@ public class InkManager implements VerbRunner, Serializable {
 
 		// READ ACTIONS
 		actions.clear();
+		ActionSerializer as = new ActionSerializer(w, Mode.MODEL);
 		JsonValue actionsValue = jsonData.get("actions");
 		for (int i = 0; i < actionsValue.size; i++) {
 			JsonValue aValue = actionsValue.get(i);
 
-			Action a = ActionSerializer.read(w, json, aValue);
+			Action a = as.read(json, aValue, Action.class);
 			actions.add(a);
 		}
 
@@ -554,12 +554,13 @@ public class InkManager implements VerbRunner, Serializable {
 		int i = 0;
 
 		for (Action a : actions) {
-			if (a instanceof Serializable && i < actionsValue.size) {
+			if (i < actionsValue.size) {
 				if (actionsValue.get(i) == null)
 					break;
 
-				((Serializable) a).read(json, actionsValue.get(i));
-				i++;
+				as.setCurrent(a);
+				if( as.read(json, actionsValue.get(i), null) != null)
+					i++;
 			}
 		}
 

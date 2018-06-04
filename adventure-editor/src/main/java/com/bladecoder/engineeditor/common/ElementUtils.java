@@ -44,12 +44,15 @@ public class ElementUtils {
 		if (e instanceof Action) {
 			StringWriter buffer = new StringWriter();
 			json.setWriter(buffer);
-			ActionSerializer.write((Action) e, json);
-			String str = buffer.toString();
-			EditorLogger.debug(str);
-			JsonValue root = new JsonReader().parse(str);
-			return ActionSerializer.read(World.getInstance(), json, root);
+			ActionSerializer as = new ActionSerializer(World.getInstance(), Mode.MODEL);
+			as.write(json, (Action)e, null);
+			String serializedAction = buffer.toString();
+
+			JsonValue root = new JsonReader().parse(serializedAction);
+			return as.read(json, root, null);
 		} else {
+			World.getInstance().getSerializer().setSerializers(json, Mode.MODEL);
+
 			SerializationHelper.getInstance().setMode(Mode.MODEL);
 			String str = json.toJson(e, (Class<?>) null);
 			return json.fromJson(e.getClass(), str);

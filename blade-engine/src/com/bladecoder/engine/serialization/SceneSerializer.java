@@ -7,6 +7,7 @@ import java.util.Map;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.Json.Serializer;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.bladecoder.engine.actions.SceneActorRef;
@@ -23,77 +24,98 @@ import com.bladecoder.engine.polygonalpathfinder.PolygonalNavGraph;
 import com.bladecoder.engine.serialization.SerializationHelper.Mode;
 import com.bladecoder.engine.util.EngineLogger;
 
-public class SceneSerializer {
+public class SceneSerializer  implements Serializer<Scene> {
 
-	static public void write(World w, Scene s, Json json) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
+	final private World w;
+	final private Mode mode;
+	
+	private Scene s;
 
-			json.writeValue("id", s.getId());
-			json.writeValue("layers", s.getLayers(), s.getLayers().getClass(), SceneLayer.class);
+	public SceneSerializer(World w, Mode mode) {
+		this.w = w;
+		this.mode = mode;
+	}
+	
+	public void setCurrent(Scene s) {
+		this.s = s;
+	}
 
-			json.writeValue("actors", s.getActors());
+	@SuppressWarnings("rawtypes")
+	@Override
+	public void write(Json json, Scene scene, Class knownType) {
+		json.writeObjectStart();
+		if (mode == Mode.MODEL) {
 
-			if (s.getBackgroundAtlas() != null) {
-				json.writeValue("backgroundAtlas", s.getBackgroundAtlas());
-				json.writeValue("backgroundRegionId", s.getBackgroundRegionId());
+			json.writeValue("id", scene.getId());
+			json.writeValue("layers", scene.getLayers(), scene.getLayers().getClass(), SceneLayer.class);
+
+			json.writeValue("actors", scene.getActors());
+
+			if (scene.getBackgroundAtlas() != null) {
+				json.writeValue("backgroundAtlas", scene.getBackgroundAtlas());
+				json.writeValue("backgroundRegionId", scene.getBackgroundRegionId());
 			}
 
-			json.writeValue("musicDesc", s.getMusicDesc());
+			json.writeValue("musicDesc", scene.getMusicDesc());
 
-			if (s.getDepthVector() != null)
-				json.writeValue("depthVector", s.getDepthVector());
+			if (scene.getDepthVector() != null)
+				json.writeValue("depthVector", scene.getDepthVector());
 
-			if (s.getPolygonalNavGraph() != null)
-				json.writeValue("polygonalNavGraph", s.getPolygonalNavGraph());
+			if (scene.getPolygonalNavGraph() != null)
+				json.writeValue("polygonalNavGraph", scene.getPolygonalNavGraph());
 
-			if (s.getSceneSize() != null)
-				json.writeValue("sceneSize", s.getSceneSize());
+			if (scene.getSceneSize() != null)
+				json.writeValue("sceneSize", scene.getSceneSize());
 
 		} else {
 			SceneActorRef actorRef;
 
 			json.writeObjectStart("actors");
-			for (BaseActor a : s.getActors().values()) {
+			for (BaseActor a : scene.getActors().values()) {
 				actorRef = new SceneActorRef(a.getInitScene(), a.getId());
 				json.writeValue(actorRef.toString(), a);
 			}
 			json.writeObjectEnd();
 			
 			json.writeObjectStart("camera");
-				CameraSerializer.write(w, s.getCamera(), json);
+				CameraSerializer.write(w, scene.getCamera(), json);
 			json.writeObjectEnd();
 
-			if (s.getCameraFollowActor() != null)
-				json.writeValue("followActor", s.getCameraFollowActor().getId());
+			if (scene.getCameraFollowActor() != null)
+				json.writeValue("followActor", scene.getCameraFollowActor().getId());
 
-			s.getSoundManager().write(json);
+			scene.getSoundManager().write(json);
 
-			if (!s.getTimers().isEmpty()) {
+			if (!scene.getTimers().isEmpty()) {
 				
 				json.writeArrayStart("timers");
-				for (Timer t : s.getTimers().getTimers()) {
+				for (Timer t : scene.getTimers().getTimers()) {
 					TimerSerializer.write(w, t, json);
 				}
 				json.writeArrayEnd();
 			}
 
-			if (s.getTextManager().getCurrentText() != null)
-				json.writeValue("textmanager", s.getTextManager());
+			if (scene.getTextManager().getCurrentText() != null)
+				json.writeValue("textmanager", scene.getTextManager());
 		}
 
-		s.getVerbManager().write(json);
+		scene.getVerbManager().write(json);
 
-		if (s.getState() != null)
-			json.writeValue("state", s.getState());
+		if (scene.getState() != null)
+			json.writeValue("state", scene.getState());
 
-		if (s.getPlayer() != null)
-			json.writeValue("player", s.getPlayer().getId());
+		if (scene.getPlayer() != null)
+			json.writeValue("player", scene.getPlayer().getId());
+		
+		json.writeObjectEnd();
 	}
 
-	@SuppressWarnings("unchecked")
-	static public void read(World w, Scene s, Json json, JsonValue jsonData) {
-		if (SerializationHelper.getInstance().getMode() == Mode.MODEL) {
-
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public Scene read(Json json, JsonValue jsonData, Class type) {	
+		if (mode == Mode.MODEL) {
+			s = new Scene(w);
+			
 			s.setId(json.readValue("id", String.class, jsonData));
 			s.getLayers().addAll(json.readValue("layers", ArrayList.class, SceneLayer.class, jsonData));
 			
@@ -204,6 +226,8 @@ public class SceneSerializer {
 		s.getVerbManager().read(json, jsonData);
 		s.setState(json.readValue("state", String.class, jsonData));
 		s.setPlayer((CharacterActor) s.getActor(json.readValue("player", String.class, jsonData), false));
+		
+		return s;
 
 	}
 }
