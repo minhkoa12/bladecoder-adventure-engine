@@ -16,35 +16,41 @@
 package com.bladecoder.engineeditor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.Files.FileType;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
-import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.bladecoder.engineeditor.common.EditorLogger;
 import com.bladecoder.engineeditor.common.EditorLogger.Levels;
 import com.bladecoder.engineeditor.common.Versions;
 
-public class Main extends LwjglApplication {
+public class Main extends Lwjgl3Application {
 
 	public static void main(final String[] args) {
-		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
+		Lwjgl3ApplicationConfiguration cfg = new Lwjgl3ApplicationConfiguration();
 
-		cfg.title = "Adventure Editor v" + Versions.getVersion();
+		cfg.setTitle("Adventure Editor v" + Versions.getVersion());
 
-		cfg.resizable = true;
-		cfg.vSyncEnabled = true;
+		cfg.setResizable(true);
+		cfg.useVsync(true);
 		// cfg.samples = 2;
 		// cfg.useGL30 = true;
 
+		List<String> iconList = new ArrayList<>();
+
 		if (Main.class.getResource("/images/ic_app64.png") != null)
-			cfg.addIcon("images/ic_app64.png", FileType.Internal);
+			iconList.add("images/ic_app64.png");
 
 		if (Main.class.getResource("/images/ic_app32.png") != null)
-			cfg.addIcon("images/ic_app32.png", FileType.Internal);
+			iconList.add("images/ic_app32.png");
 
 		if (Main.class.getResource("/images/ic_app16.png") != null)
-			cfg.addIcon("images/ic_app16.png", FileType.Internal);
+			iconList.add("images/ic_app16.png");
+
+		cfg.setWindowIcon(FileType.Internal, iconList.toArray(new String[0]));
 
 		parseArgs(args);
 
@@ -66,7 +72,7 @@ public class Main extends LwjglApplication {
 		}
 	}
 
-	public Main(Editor editor, LwjglApplicationConfiguration cfg) {
+	public Main(Editor editor, Lwjgl3ApplicationConfiguration cfg) {
 		super(editor, cfg);
 
 		Gdx.graphics.setWindowedMode(Math.max((int) (Gdx.graphics.getDisplayMode().width * 0.9), 1920 / 2),
@@ -75,7 +81,7 @@ public class Main extends LwjglApplication {
 
 	@Override
 	public void exit() {
-		((Editor) listener).exit();
+		((Editor) getApplicationListener()).exit();
 	}
 
 	public void exitSaved() {
