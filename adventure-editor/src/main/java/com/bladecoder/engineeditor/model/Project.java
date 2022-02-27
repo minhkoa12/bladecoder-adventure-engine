@@ -30,7 +30,6 @@ import java.util.Properties;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Window;
-import org.lwjgl.glfw.GLFW;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.SerializationException;

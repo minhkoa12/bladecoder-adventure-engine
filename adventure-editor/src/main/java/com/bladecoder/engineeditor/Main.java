@@ -36,8 +36,6 @@ public class Main extends Lwjgl3Application {
 
 		cfg.setResizable(true);
 		cfg.useVsync(true);
-		// cfg.samples = 2;
-		// cfg.useGL30 = true;
 
 		List<String> iconList = new ArrayList<>();
 
